@@ -30,7 +30,7 @@ Documentation pack: **v1.0-RC2**
 | OD-06 | Binding assumptions B1–B5 ([validator/README](../../validator/README.md)), B6–B8 ([core/README](../../core/README.md)) และ golden expected outputs ใน `fixtures/golden/records/cases.json` | **CLOSED 2026-10-24**: ผู้ใช้ยืนยันทั้งหมด; เป็น binding authority และ regression authority; การเปลี่ยนใช้ ADR + migration plan + User approval |
 | OD-08 | Separation of duties: ผู้สร้าง revision อนุมัติ revision เดียวกันเองได้หรือไม่ | ยังเปิด: ข้อเสนอขึ้นกับจำนวนผู้ตรวจ — ผู้ใช้ต้องเลือก policy ก่อนบังคับใช้ใน review |
 | OD-09 | Canonical repository visibility (public/private) และ GitHub remote สำหรับ push | **CLOSED 2026-10-24**: ผู้ใช้เลือก repo `Krit-PJ/K-Knowledge-Banks` **Public**, push ทั้ง repo ปัจจุบัน, ใช้เป็น GitHub Pages frontend, commit email = GitHub noreply, push ผ่าน GitHub connector ของ Claude. ผลที่ตามมา: canonical/fixtures/docs เป็นสาธารณะ → ห้ามนำข้อมูลจริงที่ไม่ใช่ PUBLIC เข้า canonical ใน repo นี้ |
-| OD-07 | Metadata ไม่สอดคล้อง RC1/RC2 | **CLOSED 2026-10-24**: แก้ `AGENTS.md:6`, `PHASE-1..4.md:3` เป็น RC2 และนำ `contracts/vocabulary/topics-v1.0-RC2.proposed.json` ออก (ซ้ำกับ topics ใน `vocabulary/v1.0-RC2.json` และไม่มีไฟล์ใดอ้างถึง; กู้คืนได้ด้วย `git show 400d492:contracts/vocabulary/topics-v1.0-RC2.proposed.json`) |
+| OD-07 | Metadata ไม่สอดคล้อง RC1/RC2 | **CLOSED 2026-10-24**: แก้ `AGENTS.md:6`, `PHASE-1..4.md:3` เป็น RC2 และนำ `contracts/vocabulary/topics-v1.0-RC2.proposed.json` ออก (ซ้ำกับ topics ใน `vocabulary/v1.0-RC2.json` และไม่มีไฟล์ใดอ้างถึง; กู้คืนได้ด้วย `git show f2e4ef2:contracts/vocabulary/topics-v1.0-RC2.proposed.json`) |
 
 ไม่มีความขัดแย้งกับไฟล์เดิม เพราะไม่มีไฟล์งานเดิม แต่ยังไม่สามารถยืนยันความตรงกับต้นฉบับแชตเต็มได้ ประเด็น OD เป็นข้อจำกัดของการ consolidate ไม่ใช่ข้ออนุมัติที่ได้รับแล้ว
 
@@ -64,7 +64,7 @@ ADR-0001 implementation: สร้าง RC2 schema/vocabulary และ GT-16/1
 
 Prompt engineering: เพิ่ม `docs/prompts/KEKB-MASTER-ENGINEERING-PROMPT.md` และ `WORK-PACKET-PROMPT-TEMPLATE.md` เป็น operational entry point ที่อ่าน live state/baseline ทุกครั้ง; ไม่เปลี่ยน Architecture หรือ approval gates
 
-P1-WP2 (2026-10-24): baseline commit `400d492` (local); ติดตั้ง ajv 8.20.0 + ajv-formats 3.0.1 (devDependencies, exact, `package-lock.json`); สร้าง `validator/` (strict loader, schema dispatch ต่อ version, cross-record rules, CLI, stable safe codes) และ concrete fixtures 35 variants ใน `fixtures/golden/records/` (scenario manifests เดิมไม่ถูกแก้)
+P1-WP2 (2026-10-24): baseline commit `f2e4ef2` (local); ติดตั้ง ajv 8.20.0 + ajv-formats 3.0.1 (devDependencies, exact, `package-lock.json`); สร้าง `validator/` (strict loader, schema dispatch ต่อ version, cross-record rules, CLI, stable safe codes) และ concrete fixtures 35 variants ใน `fixtures/golden/records/` (scenario manifests เดิมไม่ถูกแก้)
 
 Verification P1-WP2: `npm test` → contracts 7/7, strict-json 6/6, golden 36/36 PASS; mutation check 6/6 rule mutants ถูกจับโดย case ที่ถูกต้อง; CLI exit 0/1 ตรง; issue output ไม่ echo marker ค่า input. Ajv strict lint `strictTypes`/`strictRequired` ถูก log (contract ผ่าน 2020-12 metaschema; ไม่แก้ contract) ข้อจำกัด: การ import Ajv ใน VM ผ่าน OneDrive mount ใช้ ~9 วินาที (I/O ไม่ใช่ CPU)
 
