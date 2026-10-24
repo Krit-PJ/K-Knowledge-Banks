@@ -1,6 +1,6 @@
 # Phase 1 — Foundation & No-AI Vertical Slice
 
-Documentation pack: **v1.0-RC1**
+Documentation pack: **v1.0-RC2**
 วันที่จัดทำ: 2026-10-23 (Asia/Bangkok)
 
 ## Ready-to-use phase prompt

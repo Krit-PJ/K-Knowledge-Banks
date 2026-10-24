@@ -27,7 +27,7 @@ Documentation pack: **v1.0-RC2**
 | OD-04 | backend/auth provider, roles, public/private canonical, source permissions, backup/retention | ตัดสิน security/deployment boundaries ก่อน integration ที่พึ่งพา |
 | OD-05 | phase allocation และ MVP 2D optional/3D deferred | ผู้ใช้ยืนยัน scope และ phase prompts |
 | OD-06 | P1-WP2 binding assumptions B1–B5 ([validator/README](../../validator/README.md)) และ golden expected outputs ใน `fixtures/golden/records/cases.json` | ผู้ใช้ยืนยันหรือแก้; ถ้าแก้ semantic ใช้ ADR |
-| OD-07 | Metadata ไม่สอดคล้อง: `AGENTS.md:6` ระบุ baseline RC1, `PHASE-1..4.md:3` ระบุ pack RC1, `topics-v1.0-RC2.proposed.json` ยังชื่อ proposed | แก้ใน packet แยกเมื่อผู้ใช้อนุมัติ (ไม่กระทบ semantic) |
+| OD-07 | Metadata ไม่สอดคล้อง RC1/RC2 | **CLOSED 2026-10-24**: แก้ `AGENTS.md:6`, `PHASE-1..4.md:3` เป็น RC2 และนำ `contracts/vocabulary/topics-v1.0-RC2.proposed.json` ออก (ซ้ำกับ topics ใน `vocabulary/v1.0-RC2.json` และไม่มีไฟล์ใดอ้างถึง; กู้คืนได้ด้วย `git show 400d492:contracts/vocabulary/topics-v1.0-RC2.proposed.json`) |
 
 ไม่มีความขัดแย้งกับไฟล์เดิม เพราะไม่มีไฟล์งานเดิม แต่ยังไม่สามารถยืนยันความตรงกับต้นฉบับแชตเต็มได้ ประเด็น OD เป็นข้อจำกัดของการ consolidate ไม่ใช่ข้ออนุมัติที่ได้รับแล้ว
 

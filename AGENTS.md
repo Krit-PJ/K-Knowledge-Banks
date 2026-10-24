@@ -3,7 +3,7 @@
 Documentation pack: **v1.0-RC2**
 วันที่จัดทำ: 2026-10-23 (Asia/Bangkok)
 
-เอกสารนี้บรรจุสาระ Master Development Prompt สำหรับใช้งานจริงตามคำสั่งผู้ใช้ ไม่ใช่การคัดลอกต้นฉบับที่ยังเข้าถึงไม่ได้ เลข v1.1 เป็นเวอร์ชัน prompt; baseline ของระบบยังเป็น v1.0-RC1
+เอกสารนี้บรรจุสาระ Master Development Prompt สำหรับใช้งานจริงตามคำสั่งผู้ใช้ ไม่ใช่การคัดลอกต้นฉบับที่ยังเข้าถึงไม่ได้ เลข v1.1 เป็นเวอร์ชัน prompt; baseline ปัจจุบันเป็น v1.0-RC2 ตาม ADR-0001 (RC1 คงไว้เพื่อ compatibility) ดู version lock ใน BASELINE
 
 ## เป้าหมายและลำดับอ่าน
 สร้าง K-Knowledge Bank ที่ Thai-first Multilingual, AI-Independent Core และมี evidence provenance อ่าน [BASELINE](docs/baseline/BASELINE.md), [PROJECT-STATE](docs/development/PROJECT-STATE.md) และเฉพาะเอกสารที่เกี่ยวข้องกับ work packet ก่อนทำงาน
