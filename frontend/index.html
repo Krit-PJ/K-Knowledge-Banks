@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>K-Knowledge Bank</title>
+<style>
+:root{--bg:#f7f6f2;--card:#ffffff;--ink:#1d2433;--muted:#5b6475;--line:#e3e1d9;--accent:#1f4e78;--ok:#2f7d4f;--warn:#9a6200}
+@media (prefers-color-scheme:dark){:root{--bg:#121519;--card:#1a1f26;--ink:#e8ebf0;--muted:#a3abb8;--line:#2a313b;--accent:#7fb2e5;--ok:#7cc79a;--warn:#e0b25a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 "Noto Sans Thai","Sarabun","Leelawadee UI",system-ui,sans-serif}
+main{max-width:880px;margin:0 auto;padding:40px 16px 64px}
+header h1{margin:0;font-size:clamp(28px,5vw,40px);letter-spacing:-.01em}
+header p{margin:6px 0 0;color:var(--muted)}
+.badge{display:inline-block;margin-top:14px;padding:4px 12px;border-radius:999px;border:1px solid var(--line);color:var(--warn);font-size:14px}
+section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-top:20px}
+h2{margin:0 0 10px;font-size:19px;color:var(--accent)}
+ol,ul{margin:0;padding-left:22px}
+li{margin:4px 0}
+.chain{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-weight:600}
+.chain span{padding:4px 10px;border-radius:8px;border:1px solid var(--line)}
+.chain i{color:var(--muted);font-style:normal}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.grid div{border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.grid b{display:block}
+.muted{color:var(--muted);font-size:14px}
+code{font-size:14px}
+a{color:var(--accent)}
+footer{margin-top:28px;color:var(--muted);font-size:14px}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>K-Knowledge Bank</h1>
+<p>คลังความรู้ภาษาไทยที่ทุกข้อสรุปย้อนกลับถึงหลักฐานต้นฉบับได้ และทำงานได้แม้ปิด AI ทั้งหมด</p>
+<span class="badge">สถานะ: กำลังพัฒนา (Phase 2) — ยังไม่มีข้อมูลความรู้เผยแพร่</span>
+</header>
+
+<section>
+<h2>หลักการ</h2>
+<div class="chain"><span>หลักฐาน</span><i>→</i><span>แบบจำลอง</span><i>→</i><span>กฎตรวจสอบ</span><i>→</i><span>มนุษย์ตัดสิน</span></div>
+<ul style="margin-top:12px">
+<li>ทุกข้อสรุปต้องย้อนถึงไฟล์ต้นฉบับ เวอร์ชัน hash และตำแหน่งอ้างอิง (หน้า ตาราง แถว)</li>
+<li>แยก Study / Report / Result / Finding / Claim ไม่นับรายงานซ้ำเป็นหลักฐานอิสระ</li>
+<li>AI เป็นตัวช่วยเสริมเท่านั้น ไม่มีสิทธิ์อนุมัติหรือเผยแพร่ความรู้</li>
+<li>ความรู้ที่เผยแพร่ต้องผ่านการอนุมัติของผู้ตรวจที่เป็นมนุษย์ ตรง revision ที่ตรวจจริง</li>
+</ul>
+</section>
+
+<section>
+<h2>หมวดหมู่ที่วางแผน</h2>
+<div class="grid">
+<div><b>สรุปข่าว</b><span class="muted">เทคโนโลยีในปัจจุบัน · ปรากฏการณ์สิ่งแวดล้อมและภัยพิบัติ · ความเคลื่อนไหวของประเทศมหาอำนาจ · พลังงาน</span></div>
+<div><b>เทรนด์</b><span class="muted">เทรนด์เทคโนโลยี · เทรนด์ AI · Skill ที่ได้รับความนิยมบน GitHub (ระบุตัวชี้วัด ช่วงเวลา และ snapshot เสมอ)</span></div>
+</div>
+</section>
+
+<section>
+<h2>ความคืบหน้า</h2>
+<ol>
+<li>Phase 1 — โครงสร้างพื้นฐานและ vertical slice แบบไม่ใช้ AI <b style="color:var(--ok)">เสร็จแล้ว</b></li>
+<li>Phase 2 — รับข้อมูลเข้า หลักฐาน และการตรวจโดยมนุษย์ <b style="color:var(--warn)">กำลังดำเนินการ</b></li>
+<li>Phase 3 — Knowledge Explorer, กราฟ และ Research Review</li>
+<li>Phase 4 — Hardening, AI เสริม และ MVP</li>
+</ol>
+</section>
+
+<section>
+<h2>สำหรับนักพัฒนา</h2>
+<p class="muted">เอกสาร baseline, contracts, validator และ core อยู่ใน repository นี้ ดู <a href="https://github.com/Krit-PJ/K-Knowledge-Banks">Krit-PJ/K-Knowledge-Banks</a> โดยเริ่มที่ <code>docs/development/PROJECT-STATE.md</code></p>
+</section>
+
+<footer>หน้านี้เป็น frontend shell แบบ static: ไม่มี script, ไม่เก็บข้อมูลผู้ใช้ และไม่มี secret ใด ๆ</footer>
+</main>
+</body>
+</html>

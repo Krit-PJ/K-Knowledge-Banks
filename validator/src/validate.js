@@ -112,6 +112,8 @@ export function validateRecordSet(records, opts = {}) {
     authorityRules(record, index).forEach((i) => push(record, i));
   }
 
+  lineageRules([...schemaValid]).forEach(({ record, issue }) => push(record, issue));
+
   issues.sort(compareIssues);
   const byType = {};
   for (const r of records) if (isObj(r) && typeof r.type === 'string') byType[r.type] = (byType[r.type] || 0) + 1;
@@ -201,6 +203,31 @@ function trendRules(record, contract, index) {
     else if (!TS.test(tw.from) || !TS.test(tw.to) || !(Date.parse(tw.from) < Date.parse(tw.to))) out.push({ code: CODES.INVALID_TREND_TIME_WINDOW, path: '/parameters/timeWindow' });
   }
   // sourceSnapshot (inputSnapshot) and parameters are schema-required on DerivationRun.
+  return out;
+}
+
+// Derivation lineage must be acyclic (binding rule 5): no self-cycle and no input that is a
+// descendant of the run's own outputs. Semantic relation graphs (RelationAssertion etc.) may cycle.
+function lineageRules(records) {
+  const runs = records.filter((r) => r.type === 'DerivationRun');
+  const edges = new Map(); // input id -> Set(output id), id-level lineage across revisions
+  for (const run of runs) for (const i of run.inputRefs) for (const o of run.outputRefs) {
+    if (!edges.has(i.id)) edges.set(i.id, new Set()); edges.get(i.id).add(o.id);
+  }
+  const reaches = (from, target) => {
+    const seen = new Set(); const stack = [from];
+    while (stack.length) {
+      const n = stack.pop(); if (n === target) return true;
+      if (seen.has(n)) continue; seen.add(n);
+      for (const m of edges.get(n) || []) stack.push(m);
+    }
+    return false;
+  };
+  const out = [];
+  for (const run of runs) {
+    const cyclic = run.outputRefs.some((o) => run.inputRefs.some((i) => i.id === o.id || reaches(o.id, i.id)));
+    if (cyclic) out.push({ record: run, issue: { code: CODES.DERIVATION_LINEAGE_CYCLE, path: '/outputRefs' } });
+  }
   return out;
 }
 

@@ -10,6 +10,7 @@ export const ERR = Object.freeze({
   APPROVAL_REQUIRED: 'APPROVAL_REQUIRED',
   IDEMPOTENCY_CONFLICT: 'IDEMPOTENCY_CONFLICT',
   READ_MODEL_INCOMPLETE: 'READ_MODEL_INCOMPLETE',
+  STALE_REFERENCE: 'STALE_REFERENCE',       // new revision cites a superseded revision
 });
 export class KekbError extends Error {
   constructor(code, details = {}) {

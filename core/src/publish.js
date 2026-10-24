@@ -9,6 +9,7 @@ import {
   writeJsonAtomic, readJson, readJsonIf,
 } from './store.js';
 import { contentHash } from './workflow.js';
+import { computeStale, staleReferences } from './dependency.js';
 
 const nowIso = (now) => (now ? now() : new Date().toISOString());
 export const READ_MODEL_RULESET = 'p1-wp3-readmodel-v1';
@@ -38,6 +39,8 @@ export function commit(root, { actorId, snapshotId, idempotencyKey, now }) {
   });
   // The ReviewSnapshot is the decision record itself (assumption B2): committed alongside its targets.
   batch.push({ ...snapshot, workflowState: 'COMMITTED', updatedAt: at });
+  const staleRefs = staleReferences(batch, canonicalRecords(root));
+  if (staleRefs.length) fail(ERR.STALE_REFERENCE, { refs: staleRefs });
   const candidate = [...canonicalRecords(root), ...batch];
   const check = validateRecordSet(candidate);
   if (!check.valid) fail(ERR.VALIDATION_FAILED, { codes: [...new Set(check.issues.map((i) => i.code))] });
@@ -85,6 +88,15 @@ function searchDoc(r, byKey) {
   return { id: r.id, type: r.type, revision: r.revision, topicIds: r.topicIds || [], text: t };
 }
 
+function derivationOf(r, byKey) {
+  const ref = r.derivationRunRef || r.provenance?.derivationRunRef;
+  const run = ref && byKey.get(key(ref.id, ref.revision));
+  if (!ref) return undefined;
+  if (!run) fail(ERR.READ_MODEL_INCOMPLETE, { recordId: r.id, missing: key(ref.id, ref.revision) });
+  const { id, revision, engine, engineVersion, ruleSet, ruleVersion, softwareVersion, inputSnapshot, inputRefs, outputRefs, outcome } = run;
+  return { id, revision, engine, engineVersion, ruleSet, ruleVersion, softwareVersion, inputSnapshot, inputRefs, outputRefs, outcome }; // parameters omitted (not allowlisted)
+}
+
 function traceEntry(r, byKey) {
   const evidence = (r.evidenceRefs || []).map((ref) => {
     const ev = byKey.get(key(ref.id, ref.revision));
@@ -97,7 +109,8 @@ function traceEntry(r, byKey) {
       sourceAsset: { id: src.id, revision: src.revision, sourceKind: src.sourceKind, sourceVersion: src.sourceVersion, hash: src.hash, originalLanguage: src.originalLanguage, accessClassification: src.accessClassification },
     };
   });
-  return { id: r.id, type: r.type, revision: r.revision, evidence };
+  const derivation = derivationOf(r, byKey);
+  return { id: r.id, type: r.type, revision: r.revision, evidence, ...(derivation ? { derivation } : {}) };
 }
 
 /**
@@ -114,22 +127,23 @@ export function buildReadModel(root, { actorId, now, faultInject } = {}) {
   for (const r of all) if (!latest.has(r.id) || latest.get(r.id).revision < r.revision) latest.set(r.id, r);
   const current = [...latest.values()].sort((a, b) => (a.id < b.id ? -1 : 1));
 
+  const stale = computeStale(all); const staleIds = new Set(stale.map((s) => s.id));
   const search = []; const trace = []; const topics = {}; const excluded = [];
   for (const r of current) {
     const doc = searchDoc(r, byKey);
-    if (doc) search.push(doc); else excluded.push({ id: r.id, type: r.type, reason: 'NOT_SEARCHABLE_TYPE' });
-    if (Array.isArray(r.evidenceRefs)) trace.push(traceEntry(r, byKey));
+    if (doc) search.push({ ...doc, dependencyStale: staleIds.has(r.id) }); else excluded.push({ id: r.id, type: r.type, reason: 'NOT_SEARCHABLE_TYPE' });
+    if (Array.isArray(r.evidenceRefs)) trace.push({ ...traceEntry(r, byKey), dependencyStale: staleIds.has(r.id) });
     for (const tid of r.topicIds || []) for (const t of [tid, ...resolveTopicNavigation([tid], r.schemaVersion)]) (topics[t] ||= []).push(key(r.id, r.revision));
   }
   for (const t of Object.keys(topics)) topics[t] = [...new Set(topics[t])].sort();
   if (search.length + excluded.length !== current.length) fail(ERR.READ_MODEL_INCOMPLETE, { reason: 'count-mismatch' });
 
-  const files = { 'search.json': { items: search }, 'trace.json': { items: trace }, 'topics.json': { topics }, 'excluded.json': { items: excluded } };
+  const files = { 'search.json': { items: search }, 'trace.json': { items: trace }, 'topics.json': { topics }, 'excluded.json': { items: excluded }, 'stale.json': { items: stale } };
   const hashes = Object.fromEntries(Object.entries(files).map(([f, v]) => [f, sha256(canonicalJson(v))]));
   const id = `rm-${m.canonicalRevision}-${sha256(canonicalJson(hashes)).slice(0, 12)}`;
   const finalDir = path.join(P.readModels, id);
   const at = nowIso(now);
-  const manifest = { readModelId: id, canonicalRevision: m.canonicalRevision, ruleSet: READ_MODEL_RULESET, builtAt: at, counts: { current: current.length, searchable: search.length, excluded: excluded.length, traced: trace.length }, files: hashes };
+  const manifest = { readModelId: id, canonicalRevision: m.canonicalRevision, ruleSet: READ_MODEL_RULESET, builtAt: at, counts: { current: current.length, searchable: search.length, excluded: excluded.length, traced: trace.length, stale: stale.length }, files: hashes };
   if (!fs.existsSync(finalDir)) {
     const tmp = `${finalDir}.tmp-${process.pid}`;
     for (const [f, v] of Object.entries(files)) writeJsonAtomic(path.join(tmp, f), v);

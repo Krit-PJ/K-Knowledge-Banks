@@ -1,17 +1,17 @@
 # Project State
 
 Documentation pack: **v1.0-RC2**
-วันที่จัดทำ: 2026-10-23 (Asia/Bangkok) · ปรับปรุงล่าสุด: 2026-10-24 (ปิด Phase 1)
+วันที่จัดทำ: 2026-10-23 (Asia/Bangkok) · ปรับปรุงล่าสุด: 2026-10-24 (เริ่ม Phase 2)
 
 ## Current status
-- Current Phase = Phase 1 — Foundation & No-AI Vertical Slice — **CLOSED (APPROVED 2026-10-24)**
-- Coding = STOPPED — รอ explicit User approval เริ่ม Phase 2
-- Next = ผู้ใช้อนุมัติเริ่ม Phase 2 (ยังไม่อนุมัติ) และตัดสิน OD-03 API surface / OD-04 backend+auth provider ก่อน implementation ที่พึ่งพา — ห้ามเริ่ม Phase 2 เอง
+- Current Phase = **Phase 2 — Knowledge Intake, Evidence & Human Review** (STARTED 2026-10-24)
+- Coding = STARTED (Phase 2 scope only; OD-03/OD-04 ตัดสินแล้ว 2026-10-24; OD-08 ยังเปิด)
+- Next = push repo ขึ้น GitHub `Krit-PJ/K-Knowledge-Banks` (Public) + เปิด GitHub Pages frontend shell (P2-WP3) — รอผู้ใช้เชื่อม GitHub connector; จากนั้น P2-WP4 backend (Cloud Run + Google Sign-In) หลังตัดสิน OD-08
 - Baseline = v1.0-RC2 (ADR-0001; RC1 retained for compatibility)
 - Master Development Prompt = v1.1 (operational consolidation)
 - Validator (P1-WP2) = DONE; GT-01..06,10,14..17 + RC1 compat = PASS (expected outputs PENDING_HUMAN_CONFIRMATION); AC-01 = PASS ระดับ validator; AC-02 = rule-level PASS / pipeline NOT RUN; GT-07,08,09,11,12,13 = NOT RUN
 - No-AI vertical slice (P1-WP3) = DONE บน local file store; GT-12 = PASS (synthetic); AC-03 No-AI core portion = PASS; `npm test` 60/60
-- Phase 1 = CLOSED (User approved 2026-10-24); Phase 2–4 = NOT STARTED
+- Phase 1 = CLOSED (User approved 2026-10-24); Phase 2 = STARTED; Phase 3–4 = NOT STARTED
 
 ## Inventory before changes
 ตรวจโฟลเดอร์ D:\OneDrive\1.14 K-Knowledge Bank วันที่ 2026-10-23: พบเฉพาะ .git ไม่มี working files หรือเอกสารเดิมที่ต้อง merge/backup Git branch = main; git status = No commits yet on main; tracked files = none ไม่มี commit/tag ถูกสร้าง
@@ -24,10 +24,12 @@ Documentation pack: **v1.0-RC2**
 |---|---|---|
 | OD-01 | ตรวจ pack กับต้นฉบับ approved baseline/MASTER DEVELOPMENT PROMPT v1.1 ถ้ามี | ผู้ใช้ยืนยัน consolidated pack หรือระบุ corrections; ห้ามอ้างว่าได้อ่านต้นฉบับแล้ว |
 | OD-02 | field bindings, cardinalities, ID/enums/null/timestamps, serialization และ predicate/role registry | ยืนยันข้อเสนอ DATA-MODEL/VOCABULARY ก่อนสร้าง executable contracts |
-| OD-03 | API endpoints/payloads/pagination/idempotency limits | ยืนยัน API surface ก่อน implementation ที่พึ่งพา |
-| OD-04 | backend/auth provider, roles, public/private canonical, source permissions, backup/retention | ตัดสิน security/deployment boundaries ก่อน integration ที่พึ่งพา |
+| OD-03 | API endpoints/payloads/pagination/idempotency limits | **CLOSED 2026-10-24**: ใช้ endpoint ตาม API-CONTRACT ที่เสนอ + cursor pagination, limit ≤ 100, idempotency key ใน mutation |
+| OD-04 | backend/auth provider, roles, public/private canonical, source permissions, backup/retention | **ส่วนหนึ่ง CLOSED 2026-10-24**: backend = Cloud Run (Node) + Google Sign-In (ID token) — GCP project/billing/service account ยังต้องตั้งโดยผู้ใช้; role assignment, source permissions, backup/retention ยังเปิด |
 | OD-05 | phase allocation และ MVP 2D optional/3D deferred | ผู้ใช้ยืนยัน scope และ phase prompts |
 | OD-06 | Binding assumptions B1–B5 ([validator/README](../../validator/README.md)), B6–B8 ([core/README](../../core/README.md)) และ golden expected outputs ใน `fixtures/golden/records/cases.json` | **CLOSED 2026-10-24**: ผู้ใช้ยืนยันทั้งหมด; เป็น binding authority และ regression authority; การเปลี่ยนใช้ ADR + migration plan + User approval |
+| OD-08 | Separation of duties: ผู้สร้าง revision อนุมัติ revision เดียวกันเองได้หรือไม่ | ยังเปิด: ข้อเสนอขึ้นกับจำนวนผู้ตรวจ — ผู้ใช้ต้องเลือก policy ก่อนบังคับใช้ใน review |
+| OD-09 | Canonical repository visibility (public/private) และ GitHub remote สำหรับ push | **CLOSED 2026-10-24**: ผู้ใช้เลือก repo `Krit-PJ/K-Knowledge-Banks` **Public**, push ทั้ง repo ปัจจุบัน, ใช้เป็น GitHub Pages frontend, commit email = GitHub noreply, push ผ่าน GitHub connector ของ Claude. ผลที่ตามมา: canonical/fixtures/docs เป็นสาธารณะ → ห้ามนำข้อมูลจริงที่ไม่ใช่ PUBLIC เข้า canonical ใน repo นี้ |
 | OD-07 | Metadata ไม่สอดคล้อง RC1/RC2 | **CLOSED 2026-10-24**: แก้ `AGENTS.md:6`, `PHASE-1..4.md:3` เป็น RC2 และนำ `contracts/vocabulary/topics-v1.0-RC2.proposed.json` ออก (ซ้ำกับ topics ใน `vocabulary/v1.0-RC2.json` และไม่มีไฟล์ใดอ้างถึง; กู้คืนได้ด้วย `git show 400d492:contracts/vocabulary/topics-v1.0-RC2.proposed.json`) |
 
 ไม่มีความขัดแย้งกับไฟล์เดิม เพราะไม่มีไฟล์งานเดิม แต่ยังไม่สามารถยืนยันความตรงกับต้นฉบับแชตเต็มได้ ประเด็น OD เป็นข้อจำกัดของการ consolidate ไม่ใช่ข้ออนุมัติที่ได้รับแล้ว
@@ -44,7 +46,9 @@ Documentation pack: **v1.0-RC2**
 | P1-WP2 validator runtime/tooling | AUTHORIZED | ผู้ใช้ตอบ “A, อนุมัติ 1-2-3-4” วันที่ 2026-10-24; scope = Node.js + Ajv 8, ติดตั้ง dev dependency (exact + lockfile), สร้าง concrete fixtures (expected outputs รอยืนยัน), baseline Git commit local (ไม่ push) |
 | Commit P1-WP2, แก้ OD-07, P1-WP3 storage = local files | AUTHORIZED | ผู้ใช้ตอบ “อนุมัติ commit, แก้ OD-07, P1-WP3 ใช้ไฟล์ local” วันที่ 2026-10-24; commit local เท่านั้น ไม่ push; OD-06 ยังไม่ได้รับการยืนยัน |
 | OD-06 B1–B8 + golden expected outputs; commit P1-WP3; ปิด Phase 1 | APPROVED | ผู้ใช้ตอบ “ยืนยัน ข้อ 1 และ 2, อนุม้ติ Phase 1 แต่ยังไม่เริ่ม Phase 2” วันที่ 2026-10-24 |
-| Phase 1 → Phase 2 | PENDING | Phase 1 ปิดแล้ว แต่ผู้ใช้สั่งชัดว่า **ยังไม่เริ่ม Phase 2** |
+| GT-07 confirm; commit P2-WP1/P2-WP2; OD-03 อนุมัติ API surface ตามที่เสนอ; OD-04 = B (Cloud Run + Google Sign-In ID token) | APPROVED | ผู้ใช้ตอบ “ยืนยันและอนุมัติข้อ 1 - 4” วันที่ 2026-10-24 (ข้อ 4 ตีความเป็นข้อแนะนำใน decision packet; OD-08 ไม่มีข้อแนะนำเดียวจึงยังเปิด) |
+| GitHub repo + Pages frontend | AUTHORIZED | ผู้ใช้ตอบ “ใช้ https://github.com/ เป็น Frontend ให้ชื่อว่า K-Knowledge-Banks เข้า GitHub และไปจัดการให้ด้วย” + เลือก Public / ทั้ง repo / noreply / push ผ่าน connector วันที่ 2026-10-24 |
+| Phase 1 → Phase 2 | AUTHORIZED | ผู้ใช้ตอบ “เริ่ม Phase 2” วันที่ 2026-10-24; scope = PHASE-2.md; backend/auth/API/provider ยังต้องตัดสินแยก (OD-03/OD-04) ห้ามเลือกเอง |
 | Phase 2 → Phase 3 | PENDING | ยังไม่มี |
 | Phase 3 → Phase 4 | PENDING | ยังไม่มี |
 | ปิด Phase 4 / รับมอบ | PENDING | ยังไม่มี |
@@ -72,4 +76,12 @@ Phase 1 exit evidence: AC-01 PASS (validator), AC-02 PASS (rule + local commit p
 
 Phase 1 closure (2026-10-24): ผู้ใช้ยืนยัน OD-06 และอนุมัติปิด Phase 1; golden fixtures เป็น regression authority
 
-Next packet: ไม่มีงานที่ได้รับอนุญาต — รอ User approval เริ่ม Phase 2 พร้อม decision OD-03/OD-04
+P2-WP1 (2026-10-24, ยังไม่ commit): validator rule `DERIVATION_LINEAGE_CYCLE` (self-cycle + descendant cycle; semantic graph cycle ยังอนุญาต); `core/src/dependency.js` คำนวณ stale (REF_SUPERSEDED / DEPENDS_ON_STALE, รวม DerivationRun→output) ลง read model `stale.json` + flag `dependencyStale` ใน search/trace; review APPROVE และ commit ปฏิเสธ `STALE_REFERENCE`; trace แสดง DerivationRun (ไม่รวม parameters) ให้ output ย้อนถึง input revision เดิม; fixtures GT-07 3 variants ใน `phase2-cases.json` = PENDING_HUMAN_CONFIRMATION
+
+Verification P2-WP1: `npm test` ผ่านทั้งหมด (ดูรายงาน); GT-07 validator 3/3 + core 4/4; mutation 5/5 ถูกจับ; ไม่มี dependency ใหม่ ข้อจำกัด: staleness เป็นแบบ conservative (อาจ flag AnalysisRun ที่อ้าง Result ที่ stale) และไม่ invalidate canonical อัตโนมัติ — ต้อง re-review โดยมนุษย์
+
+P2-WP2 (2026-10-24): ผู้ใช้สั่งใช้ Drive folder “4. K-Knowledge Bank” และสร้าง Google Sheet เป็น database ตามที่กำหนด → สร้าง Google Sheet “KEKB Workflow” (7 tabs: README, IntakeQueue, RecordStatus, ReviewQueue, CandidateQueue, AuditLog, Vocab; data validation อ้าง Vocab) ตามบทบาท baseline = operational workflow state เท่านั้น (ไม่ใช่ canonical/KG database); contract ของชีตอยู่ที่ `contracts/workflow-sheet/kekb-workflow-sheet-v1.json`; Drive/Sheet IDs เก็บใน `config/integrations.local.json` (gitignored, ไม่ commit เพราะเปิดถึง resource ส่วนตัว)
+
+Verification P2-WP2: อ่านไฟล์หลัง upload ผ่าน Drive → 7 tabs, headers ครบตาม contract, Vocab ตรง vocabulary RC2; data validation ใน Google Sheets = NOT VERIFIED (Drive read ไม่แสดง); known issue: README บางบรรทัดในพจนานุกรมคอลัมน์ (timestamp columns) อธิบายผิดว่า "ค่าจาก Vocab" — แก้ได้เมื่อเปิด Google Sheets connector; ยังไม่มี sync อัตโนมัติ (รอ OD-04)
+
+Next packet: P2-WP3 GitHub repo + Pages frontend shell; แล้ว P2-WP4 backend (Cloud Run + Google Sign-In) + Sheets/Drive sync

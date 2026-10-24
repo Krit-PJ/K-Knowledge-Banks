@@ -11,6 +11,7 @@ import {
 
 const ROOT = new URL('../../fixtures/golden/records/', import.meta.url);
 const manifest = JSON.parse(fs.readFileSync(new URL('cases.json', ROOT), 'utf8'));
+const phase2 = JSON.parse(fs.readFileSync(new URL('phase2-cases.json', ROOT), 'utf8'));
 const SAFE_KEYS = new Set(['code', 'recordId', 'revision', 'recordType', 'path', 'keyword', 'file', 'role']);
 const KNOWN_CODES = new Set(Object.values(CODES));
 
@@ -26,7 +27,7 @@ function load(dir) {
 const find = (records, ref) => records.find((r) => r.id === ref.id && r.revision === ref.revision && r.type === ref.type);
 const count = (records, type) => records.filter((r) => r.type === type).length;
 
-for (const c of manifest.cases) {
+for (const c of [...manifest.cases, ...phase2.cases]) {
   test(`${c.id} ${c.variant}`, () => {
     const { records, preIssues } = load(c.dir);
     const e = c.expected; const op = c.operation;
@@ -89,6 +90,11 @@ for (const c of manifest.cases) {
     }
   });
 }
+
+test('phase 2 golden manifest is human-confirmed regression authority', () => {
+  assert.equal(phase2.confirmationStatus, 'CONFIRMED');
+  assert.equal(phase2.confirmation.confirmedBy, 'User');
+});
 
 test('golden manifest is human-confirmed regression authority', () => {
   assert.equal(manifest.confirmationStatus, 'CONFIRMED');

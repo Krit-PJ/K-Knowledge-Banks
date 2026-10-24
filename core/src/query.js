@@ -25,8 +25,15 @@ export function search(root, { query, topicId, limit = 20 }) {
     .map((d) => ({ d, matched: d.text.filter((t) => norm(t.text).includes(q)) }))
     .filter((x) => x.matched.length > 0)
     .slice(0, n)
-    .map(({ d, matched }) => ({ id: d.id, type: d.type, revision: d.revision, topicIds: d.topicIds, matched }));
+    .map(({ d, matched }) => ({ id: d.id, type: d.type, revision: d.revision, topicIds: d.topicIds, dependencyStale: d.dependencyStale === true, matched }));
   return { items, ...meta };
+}
+
+/** Stale dependents in the ACTIVE read model (need re-validation / re-review). */
+export function staleDependents(root) {
+  const a = active(root);
+  if (!a.dir) return { items: [], canonicalRevision: a.canonicalRevision, readModelRevision: null, stale: true };
+  return { items: readJson(path.join(a.dir, 'stale.json')).items, canonicalRevision: a.canonicalRevision, readModelRevision: a.readModelRevision, stale: a.stale };
 }
 
 export function trace(root, { id }) {

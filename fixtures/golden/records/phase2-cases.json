@@ -1,0 +1,59 @@
+{
+  "fixtureSet": "phase2-records-v1.0-RC2",
+  "baseline": "v1.0-RC2",
+  "schemaVersions": [
+    "v1.0-RC2"
+  ],
+  "ruleSetVersion": "p2-wp1-v1",
+  "confirmationStatus": "CONFIRMED",
+  "note": "Phase 2 golden fixtures (P2-WP1). Synthetic data only. Expected outputs confirmed by a human on 2026-10-24 and are regression authority.",
+  "cases": [
+    {
+      "id": "GT-07",
+      "variant": "valid-lineage-chain",
+      "dir": "GT-07/valid-lineage-chain",
+      "operation": {
+        "kind": "validate"
+      },
+      "expected": {
+        "validation": "PASS"
+      },
+      "note": "SourceAsset → Result → Finding; Study↔Report reference cycle is allowed (semantic, not lineage)"
+    },
+    {
+      "id": "GT-07",
+      "variant": "derivation-self-cycle",
+      "dir": "GT-07/derivation-self-cycle",
+      "operation": {
+        "kind": "validate"
+      },
+      "expected": {
+        "validation": "FAIL",
+        "codes": [
+          "DERIVATION_LINEAGE_CYCLE"
+        ]
+      }
+    },
+    {
+      "id": "GT-07",
+      "variant": "derivation-descendant-cycle",
+      "dir": "GT-07/derivation-descendant-cycle",
+      "operation": {
+        "kind": "validate"
+      },
+      "expected": {
+        "validation": "FAIL",
+        "codes": [
+          "DERIVATION_LINEAGE_CYCLE"
+        ]
+      },
+      "note": "input of a run is a descendant of its output"
+    }
+  ],
+  "confirmation": {
+    "confirmedBy": "User",
+    "confirmedAt": "2026-10-24",
+    "evidence": "ผู้ใช้ตอบ “ยืนยันและอนุมัติข้อ 1 - 4” (ข้อ 1 = ยืนยัน GT-07)",
+    "scope": "expected outputs of GT-07 cases; changes require ADR + migration plan + User approval"
+  }
+}

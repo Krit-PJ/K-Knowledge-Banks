@@ -4,6 +4,7 @@ import path from 'node:path';
 import { validateRecordSet } from '../../validator/src/index.js';
 import { ERR, fail } from './errors.js';
 import { uuidv7, sha256, canonicalJson } from './ids.js';
+import { staleReferences } from './dependency.js';
 import {
   paths, key, getActor, requireRole, audit, putDraft, getDraft, draftRevisions, latestDrafts,
   canonicalRecords, writeJsonAtomic, readJson,
@@ -168,6 +169,10 @@ export function review(root, { actorId, requestId, decision, reason, now }) {
   });
   const check = validateRecordSet(workingSet(root));
   if (decision === 'APPROVE' && !check.valid) fail(ERR.VALIDATION_FAILED, { codes: [...new Set(check.issues.map((i) => i.code))] });
+  if (decision === 'APPROVE') {
+    const staleRefs = staleReferences(targets, canonicalRecords(root));
+    if (staleRefs.length) fail(ERR.STALE_REFERENCE, { refs: staleRefs });
+  }
   const evidence = new Map();
   for (const t of targets) {
     if (t.type === 'Evidence') evidence.set(key(t.id, t.revision), { id: t.id, type: t.type, revision: t.revision });
