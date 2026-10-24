@@ -108,7 +108,10 @@ test('audit rows: sequential, sync actor, sanitized', () => {
 
 test('Code.js uses no secrets and only the declared services', () => {
   const code = fs.readFileSync(new URL('../Code.js', import.meta.url), 'utf8');
-  assert.ok(!/(token|password|apikey|api_key|Bearer)\s*[:=]/i.test(code));
+  // no hardcoded credential literals (e.g. token: 'abc…', API_KEY = "…", Bearer xyz)
+  assert.ok(!/(token|password|secret|api_?key)\w*['"]?\s*[:=]\s*['"][^'"]{8,}['"]/i.test(code), 'hardcoded secret literal');
+  assert.ok(!/Bearer\s+[A-Za-z0-9._-]{10,}/.test(code), 'hardcoded bearer token');
+  for (const probe of ["token: 'abcdefghijkl'", 'API_KEY = "0123456789abcdef"']) assert.ok(/(token|password|secret|api_?key)\w*['"]?\s*[:=]\s*['"][^'"]{8,}['"]/i.test(probe), 'detector self-check');
   const manifest = JSON.parse(fs.readFileSync(new URL('../appsscript.json', import.meta.url), 'utf8'));
   assert.ok(manifest.oauthScopes.includes('https://www.googleapis.com/auth/spreadsheets.currentonly'));
   assert.ok(!manifest.oauthScopes.some((s) => /auth\/drive$/.test(s)), 'no full Drive write scope');

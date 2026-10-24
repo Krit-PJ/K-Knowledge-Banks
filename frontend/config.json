@@ -1,0 +1,5 @@
+{
+  "apiUrl": "",
+  "oauthClientId": "",
+  "note": "Public values only (Apps Script Web App URL and OAuth client ID are not secrets). Never put tokens or keys here."
+}

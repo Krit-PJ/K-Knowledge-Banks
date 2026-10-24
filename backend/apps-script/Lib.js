@@ -159,7 +159,7 @@ var KEKB = (function () {
 
   function auditRows(lastSeq, entries, nowIso) {
     return entries.map(function (e, i) {
-      return [lastSeq + i + 1, nowIso, SYNC_ACTOR, e.action, e.target, e.outcome, e.code || ''].map(sanitizeCell);
+      return [lastSeq + i + 1, nowIso, e.actor || SYNC_ACTOR, e.action, e.target, e.outcome, e.code || ''].map(sanitizeCell);
     });
   }
 

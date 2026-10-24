@@ -140,3 +140,68 @@ function appendAudit_(entries, now) {
   var rows = KEKB.auditRows(last, entries, now);
   if (rows.length) t.sheet.getRange(t.sheet.getLastRow() + 1, 1, rows.length, rows[0].length).setValues(rows);
 }
+
+// ---------------------------------------------------------------------------------------------
+// P2-WP5 web API (secure write boundary). Deployed as a Web App: execute as owner, access anyone.
+// Access "anyone" is safe only because EVERY request is authenticated by a Google ID token
+// (verified by Google's tokeninfo) and authorized against ACTORS_JSON (Script Properties).
+// Script Properties: OAUTH_CLIENT_ID, ACTORS_JSON = {"email": {"actorId": "human:x", "roles": [...]}}
+// ---------------------------------------------------------------------------------------------
+
+function doGet() {
+  return json_({ ok: true, service: 'kekb-api', contractVersion: KEKB_API.CONTRACT_VERSION });
+}
+
+function doPost(e) {
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(20000)) return json_({ ok: false, error: { code: 'RATE_LIMITED' }, contractVersion: KEKB_API.CONTRACT_VERSION });
+  try {
+    return json_(KEKB_API.handle(e && e.postData ? e.postData.contents : '', apiDeps_()));
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function json_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
+
+function apiDeps_() {
+  var p = PropertiesService.getScriptProperties();
+  var raw = {};
+  try { raw = JSON.parse(p.getProperty('ACTORS_JSON') || '{}'); } catch (err) { raw = {}; }
+  var actors = {};
+  Object.keys(raw).forEach(function (k) { actors[String(k).toLowerCase()] = raw[k]; });
+  var cache = CacheService.getScriptCache();
+  var idemKey = function (k) { return 'idem:' + sha256Hex_(Utilities.newBlob(k).getBytes()); };
+  return {
+    nowMs: function () { return Date.now(); },
+    clientId: p.getProperty('OAUTH_CLIENT_ID'),
+    actors: actors,
+    newRequestId: newId_,
+    fetchClaims: function (token) {
+      // POST keeps the token out of URLs/logs; Google verifies the signature and returns the claims
+      var r = UrlFetchApp.fetch('https://oauth2.googleapis.com/tokeninfo', { method: 'post', payload: { id_token: token }, muteHttpExceptions: true });
+      if (r.getResponseCode() !== 200) return null;
+      return JSON.parse(r.getContentText('UTF-8'));
+    },
+    hash: function (text) { return sha256Hex_(Utilities.newBlob(text, 'application/json').getBytes()); },
+    intake: {
+      list: function () { var t = table_('IntakeQueue'); return KEKB.rowsToObjects(t.header, t.rows); },
+      find: function (intakeId) {
+        var t = table_('IntakeQueue'); var objs = KEKB.rowsToObjects(t.header, t.rows);
+        for (var i = 0; i < objs.length; i++) if (objs[i].intakeId === intakeId) return { row: i + 2, obj: objs[i] };
+        return null;
+      },
+      update: function (row, changes) {
+        var t = table_('IntakeQueue');
+        Object.keys(changes).forEach(function (c) {
+          var col = t.header.indexOf(c);
+          if (col < 0) throw new Error('SHEET_SCHEMA_MISMATCH');
+          t.sheet.getRange(row, col + 1).setValue(KEKB.sanitizeCell(changes[c]));
+        });
+      },
+    },
+    // retention 6 h (CacheService max); policy for longer retention is still open
+    idem: { get: function (k) { return cache.get(idemKey(k)); }, put: function (k, v) { cache.put(idemKey(k), v, 21600); } },
+    audit: function (entry) { appendAudit_([entry], new Date().toISOString()); },
+  };
+}

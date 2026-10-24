@@ -6,7 +6,7 @@ Documentation pack: **v1.0-RC2**
 ## Current status
 - Current Phase = **Phase 2 — Knowledge Intake, Evidence & Human Review** (STARTED 2026-10-24)
 - Coding = STARTED (Phase 2 scope only; OD-03/OD-04 ตัดสินแล้ว 2026-10-24; OD-08 ยังเปิด)
-- Next = ทดสอบ Drive intake แบบ end-to-end ด้วยไฟล์จริง (ไฟล์ที่ผู้ใช้วางใน SourceAssets); จากนั้น P2-WP5 = web write endpoints (ต้องตัดสิน identity + OD-08)
+- Next = P2-WP5 secure write boundary: Google Sign-In (ID token) บน GitHub Pages → Apps Script Web App ตรวจ token + allowlist + role แล้วเขียน Sheet พร้อม audit; e2e intake ด้วยไฟล์จริงยังรอผู้ใช้วางไฟล์
 - Baseline = v1.0-RC2 (ADR-0001; RC1 retained for compatibility)
 - Master Development Prompt = v1.1 (operational consolidation)
 - Validator (P1-WP2) = DONE; GT-01..06,10,14..17 + RC1 compat = PASS (expected outputs PENDING_HUMAN_CONFIRMATION); AC-01 = PASS ระดับ validator; AC-02 = rule-level PASS / pipeline NOT RUN; GT-07,08,09,11,12,13 = NOT RUN
@@ -28,7 +28,7 @@ Documentation pack: **v1.0-RC2**
 | OD-04 | backend/auth provider, roles, public/private canonical, source permissions, backup/retention | **CHANGED 2026-10-24**: backend = **Google Apps Script** (ผู้ใช้เลือก A แทน B เพื่อไม่ต้องตั้ง GCP billing); identity สำหรับ web write endpoints, role assignment, source permissions, backup/retention ยังเปิด |
 | OD-05 | phase allocation และ MVP 2D optional/3D deferred | ผู้ใช้ยืนยัน scope และ phase prompts |
 | OD-06 | Binding assumptions B1–B5 ([validator/README](../../validator/README.md)), B6–B8 ([core/README](../../core/README.md)) และ golden expected outputs ใน `fixtures/golden/records/cases.json` | **CLOSED 2026-10-24**: ผู้ใช้ยืนยันทั้งหมด; เป็น binding authority และ regression authority; การเปลี่ยนใช้ ADR + migration plan + User approval |
-| OD-08 | Separation of duties: ผู้สร้าง revision อนุมัติ revision เดียวกันเองได้หรือไม่ | ยังเปิด: ข้อเสนอขึ้นกับจำนวนผู้ตรวจ — ผู้ใช้ต้องเลือก policy ก่อนบังคับใช้ใน review |
+| OD-08 | Separation of duties: ผู้สร้าง revision อนุมัติ revision เดียวกันเองได้หรือไม่ | **CLOSED 2026-10-24**: อนุญาต (ผ่อนปรน) แต่ต้องบันทึก flag `selfApproval` ใน snapshot/audit เสมอ — ทบทวนใหม่เมื่อมีผู้ตรวจ ≥ 2 คน |
 | OD-09 | Canonical repository visibility (public/private) และ GitHub remote สำหรับ push | **CLOSED 2026-10-24**: ผู้ใช้เลือก repo `Krit-PJ/K-Knowledge-Banks` **Public**, push ทั้ง repo ปัจจุบัน, ใช้เป็น GitHub Pages frontend, commit email = GitHub noreply, push ผ่าน GitHub connector ของ Claude. ผลที่ตามมา: canonical/fixtures/docs เป็นสาธารณะ → ห้ามนำข้อมูลจริงที่ไม่ใช่ PUBLIC เข้า canonical ใน repo นี้ |
 | OD-07 | Metadata ไม่สอดคล้อง RC1/RC2 | **CLOSED 2026-10-24**: แก้ `AGENTS.md:6`, `PHASE-1..4.md:3` เป็น RC2 และนำ `contracts/vocabulary/topics-v1.0-RC2.proposed.json` ออก (ซ้ำกับ topics ใน `vocabulary/v1.0-RC2.json` และไม่มีไฟล์ใดอ้างถึง; กู้คืนได้ด้วย `git show f2e4ef2:contracts/vocabulary/topics-v1.0-RC2.proposed.json`) |
 
@@ -47,6 +47,7 @@ Documentation pack: **v1.0-RC2**
 | Commit P1-WP2, แก้ OD-07, P1-WP3 storage = local files | AUTHORIZED | ผู้ใช้ตอบ “อนุมัติ commit, แก้ OD-07, P1-WP3 ใช้ไฟล์ local” วันที่ 2026-10-24; commit local เท่านั้น ไม่ push; OD-06 ยังไม่ได้รับการยืนยัน |
 | OD-06 B1–B8 + golden expected outputs; commit P1-WP3; ปิด Phase 1 | APPROVED | ผู้ใช้ตอบ “ยืนยัน ข้อ 1 และ 2, อนุม้ติ Phase 1 แต่ยังไม่เริ่ม Phase 2” วันที่ 2026-10-24 |
 | GT-07 confirm; commit P2-WP1/P2-WP2; OD-03 อนุมัติ API surface ตามที่เสนอ; OD-04 = B (Cloud Run + Google Sign-In ID token) | APPROVED | ผู้ใช้ตอบ “ยืนยันและอนุมัติข้อ 1 - 4” วันที่ 2026-10-24 (ข้อ 4 ตีความเป็นข้อแนะนำใน decision packet; OD-08 ไม่มีข้อแนะนำเดียวจึงยังเปิด) |
+| Identity = Google Sign-In + allowlist อีเมล; OD-08 = ผ่อนปรน + flag; เริ่ม P2-WP5 | APPROVED | ผู้ใช้ตอบ “ตามที่แนะนำ” วันที่ 2026-10-24 ต่อคำถาม (1) ยืนยันตัวตนด้วยบัญชี Google เฉพาะอีเมลที่กำหนด (2) อนุมัติงานตัวเองได้แต่บันทึกไว้ |
 | OD-04 เปลี่ยนเป็น Apps Script + เริ่ม P2-WP4 | AUTHORIZED | ผู้ใช้ตอบ “เปลี่ยนเป็น A (Apps Script) และ ดำเนินการต่อที่ Phase 2: P2-WP4 backend และการ sync กับ Sheets/Drive” วันที่ 2026-10-24 |
 | GitHub repo + Pages frontend | AUTHORIZED | ผู้ใช้ตอบ “ใช้ https://github.com/ เป็น Frontend ให้ชื่อว่า K-Knowledge-Banks เข้า GitHub และไปจัดการให้ด้วย” + เลือก Public / ทั้ง repo / noreply / push ผ่าน connector วันที่ 2026-10-24 |
 | Phase 1 → Phase 2 | AUTHORIZED | ผู้ใช้ตอบ “เริ่ม Phase 2” วันที่ 2026-10-24; scope = PHASE-2.md; backend/auth/API/provider ยังต้องตัดสินแยก (OD-03/OD-04) ห้ามเลือกเอง |
