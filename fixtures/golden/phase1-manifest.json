@@ -1,0 +1,70 @@
+{
+  "fixtureSet": "phase1-core-v1.0-RC1",
+  "schemaVersion": "v1.0-RC1",
+  "vocabularyVersion": "v1.0-RC1",
+  "ruleSetVersion": "phase1-core-v1",
+  "status": "EXPECTED OUTPUTS REQUIRE HUMAN CONFIRMATION BEFORE REGRESSION AUTHORITY",
+  "cases": [
+    {
+      "id": "GT-01",
+      "input": { "studies": ["S1"], "reports": [{ "id": "R1", "studyIds": ["S1"] }, { "id": "R2", "studyIds": ["S1"] }], "citations": ["R1:E1", "R2:E2"] },
+      "expected": { "studyCount": 1, "reportCount": 2, "independentStudyCount": 1, "validation": "PASS" },
+      "reason": "หลายรายงานของ Study เดียวกันไม่เพิ่มจำนวน independent evidence"
+    },
+    {
+      "id": "GT-02",
+      "input": { "reports": [{ "id": "R3", "studyIds": ["S1", "S2"] }] },
+      "expected": { "studyCount": 2, "reportCount": 1, "validation": "PASS" },
+      "reason": "Report หนึ่งรายการอาจครอบคลุมหลาย Study"
+    },
+    {
+      "id": "GT-03",
+      "input": { "chain": ["Result:X1", "Finding:F1", "Claim:C1"], "evidenceRefs": ["E1"] },
+      "expected": { "recordTypes": ["Result", "Finding", "Claim"], "merged": false, "validation": "PASS" },
+      "reason": "Result, Finding และ Claim เป็นคนละ semantic type"
+    },
+    {
+      "id": "GT-04",
+      "variants": [
+        { "name": "claim-without-evidence", "input": { "type": "Claim", "evidenceRefs": [] }, "expectedValidation": "FAIL" },
+        { "name": "evidence-without-locator", "input": { "type": "Evidence", "locator": null }, "expectedValidation": "FAIL" }
+      ],
+      "expected": { "publishBlocked": true },
+      "reason": "Claim และ Evidence dependency ที่ไม่ครบต้องถูก reject"
+    },
+    {
+      "id": "GT-05",
+      "input": { "claimFrameRoles": ["subject", "intervention", "comparator", "population", "outcome", "time"] },
+      "expected": { "preservedRoles": ["subject", "intervention", "comparator", "population", "outcome", "time"], "flattenedToTriple": false, "validation": "PASS" },
+      "reason": "Contextual/n-ary ClaimFrame ต้องไม่สูญบริบท"
+    },
+    {
+      "id": "GT-06",
+      "input": { "relationType": "SUPPORTS", "participantRoles": ["subject", "object", "condition"], "evidenceRefs": ["E1"], "reviewState": "REVIEW_READY" },
+      "expected": { "approvedFact": false, "validation": "PASS" },
+      "reason": "RelationAssertion ที่ยังไม่ผ่าน human review ไม่ใช่ approved fact"
+    },
+    {
+      "id": "GT-10",
+      "input": { "reviewSnapshot": { "target": "C1", "revision": 1, "decision": "APPROVE" }, "publishAttempt": { "target": "C1", "revision": 2 } },
+      "expected": { "validation": "FAIL", "publishBlocked": true, "error": "REVISION_MISMATCH" },
+      "reason": "Approval ผูกกับ revision ที่ตรึงไว้"
+    },
+    {
+      "id": "GT-14",
+      "variants": [
+        { "name": "dangling-ref", "input": { "ref": "missing" }, "expectedValidation": "FAIL" },
+        { "name": "duplicate-id", "input": { "ids": ["same", "same"] }, "expectedValidation": "FAIL" },
+        { "name": "unsupported-version", "input": { "schemaVersion": "v0" }, "expectedValidation": "FAIL" }
+      ],
+      "expected": { "safeFieldIssues": true },
+      "reason": "Reference, identity และ version invariants ต้องถูกบังคับ"
+    },
+    {
+      "id": "GT-15",
+      "input": { "measures": [{ "value": 1, "unit": "mg", "context": "A" }, { "value": 1, "unit": "g", "context": "B" }], "valueStates": ["UNKNOWN", "NOT_APPLICABLE"] },
+      "expected": { "mergedMeasures": false, "collapsedValueStates": false, "validation": "PASS" },
+      "reason": "unit/context และ absence semantics ต่างกันต้องไม่ merge"
+    }
+  ]
+}

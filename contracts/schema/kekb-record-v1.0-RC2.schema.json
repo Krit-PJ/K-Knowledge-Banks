@@ -1,0 +1,403 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kekb.local/schema/kekb-record-v1.0-RC2.schema.json",
+  "title": "KEKB Canonical Record",
+  "description": "Portable record contract for K-Knowledge Bank v1.0-RC2 with ADR-0001 topic classification.",
+  "oneOf": [
+    { "$ref": "#/$defs/SourceAsset" },
+    { "$ref": "#/$defs/Study" },
+    { "$ref": "#/$defs/Report" },
+    { "$ref": "#/$defs/Evidence" },
+    { "$ref": "#/$defs/AnalysisRun" },
+    { "$ref": "#/$defs/Result" },
+    { "$ref": "#/$defs/Finding" },
+    { "$ref": "#/$defs/ClaimFrame" },
+    { "$ref": "#/$defs/Claim" },
+    { "$ref": "#/$defs/RelationAssertion" },
+    { "$ref": "#/$defs/DerivationRun" },
+    { "$ref": "#/$defs/ResearchProblem" },
+    { "$ref": "#/$defs/ResearchGoal" },
+    { "$ref": "#/$defs/ResearchObjective" },
+    { "$ref": "#/$defs/ResearchQuestion" },
+    { "$ref": "#/$defs/Hypothesis" },
+    { "$ref": "#/$defs/ReviewProtocol" },
+    { "$ref": "#/$defs/EvidenceRequirement" },
+    { "$ref": "#/$defs/EvidenceAlignment" },
+    { "$ref": "#/$defs/Synthesis" },
+    { "$ref": "#/$defs/ReviewSnapshot" },
+    { "$ref": "#/$defs/GapCandidate" },
+    { "$ref": "#/$defs/ConflictCandidate" }
+  ],
+  "$defs": {
+    "RecordType": {
+      "enum": [
+        "SourceAsset", "Study", "Report", "Evidence", "AnalysisRun", "Result",
+        "Finding", "ClaimFrame", "Claim", "RelationAssertion", "DerivationRun",
+        "ResearchProblem", "ResearchGoal", "ResearchObjective", "ResearchQuestion",
+        "Hypothesis", "ReviewProtocol", "EvidenceRequirement", "EvidenceAlignment",
+        "Synthesis", "ReviewSnapshot", "GapCandidate", "ConflictCandidate"
+      ]
+    },
+    "WorkflowState": {
+      "enum": [
+        "RECEIVED", "REGISTERED", "EXTRACTED", "VALIDATED", "REVIEW_READY",
+        "APPROVED", "COMMITTED", "PUBLISHED", "NEEDS_REVISION", "REJECTED",
+        "ERROR", "SUPERSEDED"
+      ]
+    },
+    "TopicId": {
+      "enum": [
+        "news",
+        "news.technology-current",
+        "news.environment-disaster",
+        "news.major-power-movements",
+        "news.energy",
+        "trends",
+        "trends.technology",
+        "trends.ai",
+        "trends.github-popular-skills"
+      ]
+    },
+    "UuidV7": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "Timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$"
+    },
+    "NonEmptyString": { "type": "string", "minLength": 1 },
+    "RecordRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "revision"],
+      "properties": {
+        "id": { "$ref": "#/$defs/UuidV7" },
+        "type": { "$ref": "#/$defs/RecordType" },
+        "revision": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "LocalizedText": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$" },
+      "additionalProperties": { "$ref": "#/$defs/NonEmptyString" }
+    },
+    "ValueState": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["state", "value"],
+          "properties": {
+            "state": { "const": "KNOWN" },
+            "value": {}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["state"],
+          "properties": {
+            "state": { "enum": ["UNKNOWN", "NOT_REPORTED", "NOT_APPLICABLE"] }
+          }
+        }
+      ]
+    },
+    "HashDigest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "digest"],
+      "properties": {
+        "algorithm": { "const": "sha256" },
+        "digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "SourceLocator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "value"],
+      "properties": {
+        "kind": { "enum": ["page", "section", "table", "figure", "paragraph", "row", "timeRange", "dataRange"] },
+        "value": { "$ref": "#/$defs/NonEmptyString" }
+      }
+    },
+    "TypedParticipant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["roleId"],
+      "properties": {
+        "roleId": {
+          "enum": ["subject", "object", "population", "condition", "comparator", "outcome", "location", "time", "method", "measurement", "intervention", "exposure", "direction", "magnitude", "qualifier"]
+        },
+        "recordRef": { "$ref": "#/$defs/RecordRef" },
+        "literal": { "$ref": "#/$defs/ValueState" },
+        "unit": { "type": "string" }
+      },
+      "oneOf": [
+        { "required": ["recordRef"], "not": { "required": ["literal"] } },
+        { "required": ["literal"], "not": { "required": ["recordRef"] } }
+      ]
+    },
+    "Provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actorId", "action", "timestamp", "sourceRefs"],
+      "properties": {
+        "actorId": { "$ref": "#/$defs/NonEmptyString" },
+        "action": { "$ref": "#/$defs/NonEmptyString" },
+        "timestamp": { "$ref": "#/$defs/Timestamp" },
+        "sourceRefs": { "type": "array", "items": { "$ref": "#/$defs/RecordRef" }, "uniqueItems": true },
+        "derivationRunRef": { "$ref": "#/$defs/RecordRef" }
+      }
+    },
+    "BaseRecord": {
+      "type": "object",
+      "required": ["id", "type", "schemaVersion", "revision", "workflowState", "createdAt", "updatedAt", "createdBy", "updatedBy", "provenance"],
+      "properties": {
+        "id": { "$ref": "#/$defs/UuidV7" },
+        "type": { "$ref": "#/$defs/RecordType" },
+        "schemaVersion": { "const": "v1.0-RC2" },
+        "revision": { "type": "integer", "minimum": 1 },
+        "workflowState": { "$ref": "#/$defs/WorkflowState" },
+        "createdAt": { "$ref": "#/$defs/Timestamp" },
+        "updatedAt": { "$ref": "#/$defs/Timestamp" },
+        "createdBy": { "$ref": "#/$defs/NonEmptyString" },
+        "updatedBy": { "$ref": "#/$defs/NonEmptyString" },
+        "language": { "type": "string", "pattern": "^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$" },
+        "provenance": { "$ref": "#/$defs/Provenance" },
+        "topicIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/TopicId" }
+        },
+        "extensions": { "type": "object", "propertyNames": { "pattern": "^[A-Za-z][A-Za-z0-9._-]*:[A-Za-z0-9._-]+$" } }
+      }
+    },
+    "SourceAsset": {
+      "allOf": [
+        { "$ref": "#/$defs/BaseRecord" },
+        {
+          "type": "object",
+          "required": ["sourceKind", "sourceVersion", "hash", "accessClassification", "originalLanguage", "storageRef", "locatorCapabilities"],
+          "properties": {
+            "type": { "const": "SourceAsset" },
+            "sourceKind": { "$ref": "#/$defs/NonEmptyString" },
+            "sourceVersion": { "$ref": "#/$defs/NonEmptyString" },
+            "hash": { "$ref": "#/$defs/HashDigest" },
+            "accessClassification": { "enum": ["PUBLIC", "RESTRICTED", "CONFIDENTIAL"] },
+            "originalLanguage": { "$ref": "#/$defs/NonEmptyString" },
+            "storageRef": { "$ref": "#/$defs/NonEmptyString" },
+            "locatorCapabilities": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["page", "section", "table", "figure", "paragraph", "row", "timeRange", "dataRange"] } }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "Study": {
+      "allOf": [
+        { "$ref": "#/$defs/BaseRecord" },
+        { "type": "object", "required": ["design", "context", "reportRefs", "dependencyKeys"], "properties": {
+          "type": { "const": "Study" }, "design": { "$ref": "#/$defs/ValueState" }, "context": { "$ref": "#/$defs/ValueState" },
+          "reportRefs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/RecordRef" } },
+          "dependencyKeys": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/NonEmptyString" } }
+        } }
+      ], "unevaluatedProperties": false
+    },
+    "Report": {
+      "allOf": [
+        { "$ref": "#/$defs/BaseRecord" },
+        { "type": "object", "required": ["sourceAssetRef", "studyRefs", "reportLanguage", "reportVersion"], "properties": {
+          "type": { "const": "Report" }, "sourceAssetRef": { "$ref": "#/$defs/RecordRef" },
+          "studyRefs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/RecordRef" } },
+          "reportLanguage": { "$ref": "#/$defs/NonEmptyString" }, "reportVersion": { "$ref": "#/$defs/NonEmptyString" }
+        } }
+      ], "unevaluatedProperties": false
+    },
+    "Evidence": {
+      "allOf": [
+        { "$ref": "#/$defs/BaseRecord" },
+        { "type": "object", "required": ["sourceAssetRef", "locator", "studyRefs", "originalExcerpt", "accessClassification"], "properties": {
+          "type": { "const": "Evidence" }, "sourceAssetRef": { "$ref": "#/$defs/RecordRef" }, "reportRef": { "$ref": "#/$defs/RecordRef" },
+          "locator": { "$ref": "#/$defs/SourceLocator" },
+          "studyRefs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/RecordRef" } },
+          "originalExcerpt": { "$ref": "#/$defs/ValueState" }, "accessClassification": { "enum": ["PUBLIC", "RESTRICTED", "CONFIDENTIAL"] }
+        } }
+      ], "unevaluatedProperties": false
+    },
+    "AnalysisRun": {
+      "allOf": [
+        { "$ref": "#/$defs/BaseRecord" },
+        { "type": "object", "required": ["studyRef", "method", "methodVersion", "resultRefs"], "properties": {
+          "type": { "const": "AnalysisRun" }, "studyRef": { "$ref": "#/$defs/RecordRef" }, "method": { "$ref": "#/$defs/NonEmptyString" },
+          "methodVersion": { "$ref": "#/$defs/NonEmptyString" }, "inputDatasetRefs": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/RecordRef" } },
+          "resultRefs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/RecordRef" } }
+        } }
+      ], "unevaluatedProperties": false
+    },
+    "Result": {
+      "allOf": [
+        { "$ref": "#/$defs/BaseRecord" },
+        { "type": "object", "required": ["analysisRunRef", "measure", "value", "unit", "context", "evidenceRefs"], "properties": {
+          "type": { "const": "Result" }, "analysisRunRef": { "$ref": "#/$defs/RecordRef" }, "measure": { "$ref": "#/$defs/NonEmptyString" },
+          "value": { "$ref": "#/$defs/ValueState" }, "unit": { "$ref": "#/$defs/ValueState" }, "context": { "$ref": "#/$defs/ValueState" },
+          "evidenceRefs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/RecordRef" } }
+        } }
+      ], "unevaluatedProperties": false
+    },
+    "Finding": {
+      "allOf": [
+        { "$ref": "#/$defs/BaseRecord" },
+        { "type": "object", "required": ["resultRefs", "explanation", "context", "evidenceRefs"], "properties": {
+          "type": { "const": "Finding" }, "resultRefs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/RecordRef" } },
+          "explanation": { "$ref": "#/$defs/LocalizedText" }, "context": { "$ref": "#/$defs/ValueState" },
+          "evidenceRefs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/RecordRef" } }
+        } }
+      ], "unevaluatedProperties": false
+    },
+    "ClaimFrame": {
+      "allOf": [
+        { "$ref": "#/$defs/BaseRecord" },
+        { "type": "object", "required": ["predicateId", "participants", "qualifiers"], "properties": {
+          "type": { "const": "ClaimFrame" }, "predicateId": { "$ref": "#/$defs/NonEmptyString" },
+          "participants": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/TypedParticipant" } },
+          "qualifiers": { "type": "array", "items": { "$ref": "#/$defs/TypedParticipant" } }
+        } }
+      ], "unevaluatedProperties": false
+    },
+    "Claim": {
+      "allOf": [
+        { "$ref": "#/$defs/BaseRecord" },
+        { "type": "object", "required": ["claimFrameRef", "evidenceRefs", "epistemicStatus"], "properties": {
+          "type": { "const": "Claim" }, "claimFrameRef": { "$ref": "#/$defs/RecordRef" },
+          "evidenceRefs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/RecordRef" } },
+          "epistemicStatus": { "$ref": "#/$defs/NonEmptyString" }
+        } }
+      ], "unevaluatedProperties": false
+    },
+    "RelationAssertion": {
+      "allOf": [
+        { "$ref": "#/$defs/BaseRecord" },
+        { "type": "object", "required": ["relationType", "targetRef", "participants", "evidenceRefs", "reviewState"], "properties": {
+          "type": { "const": "RelationAssertion" }, "relationType": { "enum": ["SUPPORTS", "CHALLENGES"] }, "targetRef": { "$ref": "#/$defs/RecordRef" },
+          "participants": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/TypedParticipant" } },
+          "evidenceRefs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/RecordRef" } },
+          "reviewState": { "$ref": "#/$defs/WorkflowState" }
+        } }
+      ], "unevaluatedProperties": false
+    },
+    "DerivationRun": {
+      "allOf": [
+        { "$ref": "#/$defs/BaseRecord" },
+        { "type": "object", "required": ["engine", "engineVersion", "ruleSet", "ruleVersion", "softwareVersion", "inputSnapshot", "parameters", "inputRefs", "outputRefs", "outcome"], "properties": {
+          "type": { "const": "DerivationRun" }, "engine": { "$ref": "#/$defs/NonEmptyString" }, "engineVersion": { "$ref": "#/$defs/NonEmptyString" },
+          "ruleSet": { "$ref": "#/$defs/NonEmptyString" }, "ruleVersion": { "$ref": "#/$defs/NonEmptyString" }, "softwareVersion": { "$ref": "#/$defs/NonEmptyString" },
+          "inputSnapshot": { "$ref": "#/$defs/HashDigest" }, "parameters": { "type": "object" },
+          "inputRefs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/RecordRef" } },
+          "outputRefs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/RecordRef" } },
+          "outcome": { "enum": ["SUCCEEDED", "FAILED"] }
+        } }
+      ], "unevaluatedProperties": false
+    },
+    "ResearchProblem": {
+      "allOf": [{ "$ref": "#/$defs/BaseRecord" }, { "type": "object", "required": ["description", "goalRefs"], "properties": {
+        "type": { "const": "ResearchProblem" }, "description": { "$ref": "#/$defs/LocalizedText" },
+        "goalRefs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/RecordRef" } }
+      } }], "unevaluatedProperties": false
+    },
+    "ResearchGoal": {
+      "allOf": [{ "$ref": "#/$defs/BaseRecord" }, { "type": "object", "required": ["problemRef", "description", "objectiveRefs"], "properties": {
+        "type": { "const": "ResearchGoal" }, "problemRef": { "$ref": "#/$defs/RecordRef" }, "description": { "$ref": "#/$defs/LocalizedText" },
+        "objectiveRefs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/RecordRef" } }
+      } }], "unevaluatedProperties": false
+    },
+    "ResearchObjective": {
+      "allOf": [{ "$ref": "#/$defs/BaseRecord" }, { "type": "object", "required": ["goalRef", "description", "questionRefs"], "properties": {
+        "type": { "const": "ResearchObjective" }, "goalRef": { "$ref": "#/$defs/RecordRef" }, "description": { "$ref": "#/$defs/LocalizedText" },
+        "questionRefs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/RecordRef" } }
+      } }], "unevaluatedProperties": false
+    },
+    "ResearchQuestion": {
+      "allOf": [{ "$ref": "#/$defs/BaseRecord" }, { "type": "object", "required": ["objectiveRef", "question", "hypothesisRefs", "evidenceRequirementRefs"], "properties": {
+        "type": { "const": "ResearchQuestion" }, "objectiveRef": { "$ref": "#/$defs/RecordRef" }, "question": { "$ref": "#/$defs/LocalizedText" },
+        "hypothesisRefs": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/RecordRef" } },
+        "evidenceRequirementRefs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/RecordRef" } }
+      } }], "unevaluatedProperties": false
+    },
+    "Hypothesis": {
+      "allOf": [{ "$ref": "#/$defs/BaseRecord" }, { "type": "object", "required": ["questionRef", "claimFrameRef", "hypothesisState", "evidenceRelationRefs"], "properties": {
+        "type": { "const": "Hypothesis" }, "questionRef": { "$ref": "#/$defs/RecordRef" }, "claimFrameRef": { "$ref": "#/$defs/RecordRef" },
+        "hypothesisState": { "enum": ["PROPOSED", "UNDER_REVIEW", "SUPPORTED", "CHALLENGED", "INCONCLUSIVE"] },
+        "evidenceRelationRefs": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/RecordRef" } }
+      } }], "unevaluatedProperties": false
+    },
+    "ReviewProtocol": {
+      "allOf": [{ "$ref": "#/$defs/BaseRecord" }, { "type": "object", "required": ["protocolVersion", "criteria", "requiredChecks", "reviewerRole", "decisionPolicy"], "properties": {
+        "type": { "const": "ReviewProtocol" }, "protocolVersion": { "$ref": "#/$defs/NonEmptyString" },
+        "criteria": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/NonEmptyString" } },
+        "requiredChecks": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/NonEmptyString" } },
+        "reviewerRole": { "const": "REVIEWER" }, "decisionPolicy": { "$ref": "#/$defs/NonEmptyString" }
+      } }], "unevaluatedProperties": false
+    },
+    "EvidenceRequirement": {
+      "allOf": [{ "$ref": "#/$defs/BaseRecord" }, { "type": "object", "required": ["targetRef", "inclusionCriteria", "exclusionCriteria", "contextRules", "dependencyRules"], "properties": {
+        "type": { "const": "EvidenceRequirement" }, "targetRef": { "$ref": "#/$defs/RecordRef" },
+        "inclusionCriteria": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/NonEmptyString" } },
+        "exclusionCriteria": { "type": "array", "items": { "$ref": "#/$defs/NonEmptyString" } },
+        "contextRules": { "type": "array", "items": { "$ref": "#/$defs/NonEmptyString" } },
+        "dependencyRules": { "type": "array", "items": { "$ref": "#/$defs/NonEmptyString" } }
+      } }], "unevaluatedProperties": false
+    },
+    "EvidenceAlignment": {
+      "allOf": [{ "$ref": "#/$defs/BaseRecord" }, { "type": "object", "required": ["evidenceRef", "requirementRef", "alignmentStatus", "reason", "assessmentProvenance"], "properties": {
+        "type": { "const": "EvidenceAlignment" }, "evidenceRef": { "$ref": "#/$defs/RecordRef" }, "requirementRef": { "$ref": "#/$defs/RecordRef" },
+        "alignmentStatus": { "enum": ["ALIGNED", "PARTIAL", "NOT_ALIGNED", "UNCERTAIN"] }, "reason": { "$ref": "#/$defs/LocalizedText" },
+        "assessmentProvenance": { "$ref": "#/$defs/Provenance" }
+      } }], "unevaluatedProperties": false
+    },
+    "Synthesis": {
+      "allOf": [{ "$ref": "#/$defs/BaseRecord" }, { "type": "object", "required": ["targetRef", "alignmentRefs", "method", "methodVersion", "derivedClaimRefs", "derivationRunRef"], "properties": {
+        "type": { "const": "Synthesis" }, "targetRef": { "$ref": "#/$defs/RecordRef" },
+        "alignmentRefs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/RecordRef" } },
+        "method": { "$ref": "#/$defs/NonEmptyString" }, "methodVersion": { "$ref": "#/$defs/NonEmptyString" },
+        "derivedClaimRefs": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/RecordRef" } }, "derivationRunRef": { "$ref": "#/$defs/RecordRef" }
+      } }], "unevaluatedProperties": false
+    },
+    "ReviewSnapshot": {
+      "allOf": [{ "$ref": "#/$defs/BaseRecord" }, { "type": "object", "required": ["targetRefs", "evidenceRefs", "protocolRef", "validationResult", "reviewerId", "decision", "reason", "decidedAt"], "properties": {
+        "type": { "const": "ReviewSnapshot" }, "targetRefs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/RecordRef" } },
+        "evidenceRefs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/RecordRef" } },
+        "protocolRef": { "$ref": "#/$defs/RecordRef" }, "validationResult": { "enum": ["PASS", "FAIL"] }, "reviewerId": { "$ref": "#/$defs/NonEmptyString" },
+        "decision": { "enum": ["APPROVE", "NEEDS_REVISION", "REJECT"] }, "reason": { "$ref": "#/$defs/LocalizedText" }, "decidedAt": { "$ref": "#/$defs/Timestamp" }
+      } }], "unevaluatedProperties": false
+    },
+    "GapCandidate": {
+      "allOf": [{ "$ref": "#/$defs/BaseRecord" }, { "type": "object", "required": ["scope", "reason", "coverage", "candidateState"], "properties": {
+        "type": { "const": "GapCandidate" }, "scope": { "$ref": "#/$defs/LocalizedText" }, "reason": { "$ref": "#/$defs/LocalizedText" },
+        "coverage": { "$ref": "#/$defs/ValueState" }, "candidateState": { "enum": ["CANDIDATE", "UNDER_REVIEW", "REJECTED", "CONFIRMED_BY_HUMAN"] }
+      } }], "unevaluatedProperties": false
+    },
+    "ConflictCandidate": {
+      "allOf": [{ "$ref": "#/$defs/BaseRecord" }, { "type": "object", "required": ["claimRefs", "contextComparison", "reason", "candidateState"], "properties": {
+        "type": { "const": "ConflictCandidate" }, "claimRefs": { "type": "array", "minItems": 2, "uniqueItems": true, "items": { "$ref": "#/$defs/RecordRef" } },
+        "contextComparison": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["population", "method", "context", "geography", "time", "outcome", "dependency"],
+          "properties": {
+            "population": { "$ref": "#/$defs/ValueState" },
+            "method": { "$ref": "#/$defs/ValueState" },
+            "context": { "$ref": "#/$defs/ValueState" },
+            "geography": { "$ref": "#/$defs/ValueState" },
+            "time": { "$ref": "#/$defs/ValueState" },
+            "outcome": { "$ref": "#/$defs/ValueState" },
+            "dependency": { "$ref": "#/$defs/ValueState" }
+          }
+        },
+        "reason": { "$ref": "#/$defs/LocalizedText" }, "candidateState": { "enum": ["CANDIDATE", "UNDER_REVIEW", "REJECTED", "CONFIRMED_BY_HUMAN"] }
+      } }], "unevaluatedProperties": false
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "registryVersion": "v1.0-RC1",
+  "status": "APPROVED",
+  "approvedAt": "2026-10-23",
+  "enums": {
+    "WorkflowState": ["RECEIVED", "REGISTERED", "EXTRACTED", "VALIDATED", "REVIEW_READY", "APPROVED", "COMMITTED", "PUBLISHED", "NEEDS_REVISION", "REJECTED", "ERROR", "SUPERSEDED"],
+    "HumanRole": ["VIEWER", "CONTRIBUTOR", "REVIEWER", "ADMIN"],
+    "ValueState": ["KNOWN", "UNKNOWN", "NOT_REPORTED", "NOT_APPLICABLE"],
+    "ReviewDecision": ["APPROVE", "NEEDS_REVISION", "REJECT"],
+    "EvidenceRelationType": ["SUPPORTS", "CHALLENGES"],
+    "AccessClassification": ["PUBLIC", "RESTRICTED", "CONFIDENTIAL"]
+  },
+  "participantRoles": [
+    { "id": "subject", "labels": { "en": "subject", "th": "ประธานของข้อเสนอ" }, "min": 1, "max": 1 },
+    { "id": "object", "labels": { "en": "object", "th": "กรรม/เป้าหมาย" }, "min": 0, "max": 1 },
+    { "id": "population", "labels": { "en": "population", "th": "ประชากร" }, "min": 0, "max": null },
+    { "id": "condition", "labels": { "en": "condition", "th": "เงื่อนไข" }, "min": 0, "max": null },
+    { "id": "comparator", "labels": { "en": "comparator", "th": "ตัวเปรียบเทียบ" }, "min": 0, "max": null },
+    { "id": "outcome", "labels": { "en": "outcome", "th": "ผลลัพธ์" }, "min": 0, "max": null },
+    { "id": "location", "labels": { "en": "location", "th": "สถานที่" }, "min": 0, "max": null },
+    { "id": "time", "labels": { "en": "time", "th": "เวลา/ช่วงเวลา" }, "min": 0, "max": null },
+    { "id": "method", "labels": { "en": "method", "th": "วิธีการ" }, "min": 0, "max": null },
+    { "id": "measurement", "labels": { "en": "measurement", "th": "การวัด" }, "min": 0, "max": null },
+    { "id": "intervention", "labels": { "en": "intervention", "th": "การแทรกแซง" }, "min": 0, "max": null },
+    { "id": "exposure", "labels": { "en": "exposure", "th": "ปัจจัยสัมผัส" }, "min": 0, "max": null },
+    { "id": "direction", "labels": { "en": "direction", "th": "ทิศทางความสัมพันธ์" }, "min": 0, "max": 1 },
+    { "id": "magnitude", "labels": { "en": "magnitude", "th": "ขนาดผล" }, "min": 0, "max": 1 },
+    { "id": "qualifier", "labels": { "en": "qualifier", "th": "ตัวขยายความ" }, "min": 0, "max": null }
+  ],
+  "predicates": [
+    { "id": "reports", "domain": ["Report"], "range": ["Study", "AnalysisRun", "Result"], "labels": { "en": "reports", "th": "รายงาน" } },
+    { "id": "derivedFrom", "domain": ["Result", "Finding", "Claim", "Synthesis"], "range": ["SourceAsset", "Evidence", "Result", "Finding", "Claim", "EvidenceAlignment"], "labels": { "en": "derived from", "th": "ได้มาจาก" } },
+    { "id": "addresses", "domain": ["ResearchGoal", "ResearchObjective", "ResearchQuestion", "Synthesis"], "range": ["ResearchProblem", "ResearchGoal", "ResearchObjective", "ResearchQuestion"], "labels": { "en": "addresses", "th": "มุ่งตอบ" } },
+    { "id": "alignedWith", "domain": ["EvidenceAlignment"], "range": ["EvidenceRequirement", "ResearchQuestion"], "labels": { "en": "aligned with", "th": "สอดคล้องกับ" } },
+    { "id": "supports", "domain": ["RelationAssertion"], "range": ["Claim", "Hypothesis"], "labels": { "en": "supports", "th": "สนับสนุน" } },
+    { "id": "challenges", "domain": ["RelationAssertion"], "range": ["Claim", "Hypothesis"], "labels": { "en": "challenges", "th": "มีหลักฐานโต้แย้ง" } },
+    { "id": "usesDataset", "domain": ["Study", "AnalysisRun"], "range": ["SourceAsset"], "labels": { "en": "uses dataset", "th": "ใช้ชุดข้อมูล" } },
+    { "id": "synthesizes", "domain": ["Synthesis"], "range": ["EvidenceAlignment"], "labels": { "en": "synthesizes", "th": "สังเคราะห์" } }
+  ],
+  "displayLabels": {
+    "Finding": { "th": "ข้อค้นพบ" },
+    "Evidence": { "th": "หลักฐาน" },
+    "Result": { "th": "ผลการศึกษา" },
+    "Estimate": { "th": "ค่าผลการวิเคราะห์" },
+    "SUPPORTS": { "th": "สนับสนุน" },
+    "CHALLENGES": { "th": "มีหลักฐานโต้แย้ง" },
+    "GapCandidate": { "th": "ประเด็นที่อาจเป็นช่องว่างความรู้" },
+    "ConflictCandidate": { "th": "ผลการศึกษาที่อาจไม่สอดคล้องกัน" },
+    "ReviewSnapshot": { "th": "ภาพรวมการทบทวน ณ เวลานั้น" }
+  }
+}

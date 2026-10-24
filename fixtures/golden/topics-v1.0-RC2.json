@@ -1,0 +1,63 @@
+{
+  "fixtureSet": "phase1-topics-v1.0-RC2",
+  "schemaVersion": "v1.0-RC2",
+  "vocabularyVersion": "v1.0-RC2",
+  "ruleSetVersion": "phase1-topic-rules-v1",
+  "status": "EXPECTED OUTPUTS REQUIRE HUMAN CONFIRMATION BEFORE REGRESSION AUTHORITY",
+  "cases": [
+    {
+      "id": "GT-16",
+      "variants": [
+        {
+          "name": "known-multiple-leaf-topics",
+          "input": { "topicIds": ["news.technology-current", "trends.ai"] },
+          "expected": { "validation": "PASS", "parentNavigation": ["news", "trends"], "canonicalIdsPreserved": true }
+        },
+        {
+          "name": "unknown-topic",
+          "input": { "topicIds": ["news.unknown"] },
+          "expected": { "validation": "FAIL", "error": "UNKNOWN_TOPIC_ID" }
+        },
+        {
+          "name": "duplicate-topic",
+          "input": { "topicIds": ["news.energy", "news.energy"] },
+          "expected": { "validation": "FAIL", "error": "DUPLICATE_TOPIC_ID" }
+        }
+      ],
+      "reason": "Topic identity ใช้ canonical IDs, hierarchy resolve ได้ และ unknown/duplicate IDs ถูก reject"
+    },
+    {
+      "id": "GT-17",
+      "variants": [
+        {
+          "name": "reproducible-github-popularity",
+          "input": {
+            "topicIds": ["trends.github-popular-skills"],
+            "derivation": {
+              "metric": "starGrowthRate",
+              "timeWindow": { "from": "2026-09-01T00:00:00.000Z", "to": "2026-10-01T00:00:00.000Z" },
+              "sourceSnapshot": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "parameters": { "minimumStars": 100 },
+              "derivationRunRef": "018f0000-0000-7000-8000-000000000001"
+            }
+          },
+          "expected": { "validation": "PASS", "reproducible": true }
+        },
+        {
+          "name": "popularity-without-time-window",
+          "input": {
+            "topicIds": ["trends.github-popular-skills"],
+            "derivation": {
+              "metric": "stars",
+              "sourceSnapshot": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "parameters": {},
+              "derivationRunRef": "018f0000-0000-7000-8000-000000000002"
+            }
+          },
+          "expected": { "validation": "FAIL", "publishBlocked": true, "error": "MISSING_TREND_TIME_WINDOW" }
+        }
+      ],
+      "reason": "GitHub popularity เป็น Derived Knowledge ที่ต้องระบุ metric, time window, source snapshot, parameters และ DerivationRun"
+    }
+  ]
+}
