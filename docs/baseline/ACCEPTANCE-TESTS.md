@@ -3,7 +3,7 @@
 Baseline version: **v1.0-RC1**
 วันที่จัดทำ: 2026-10-23 (Asia/Bangkok)
 
-สถานะ 2026-10-24 (P1-WP2): AC-01 = PASS ระดับ validator (รอยืนยัน golden expected outputs); AC-02 = PASS เฉพาะ rule-level pre-check (GT-04,10) ส่วน publication pipeline = NOT RUN; AC อื่น = NOT RUN การตรวจ validator ไม่ใช่ application/vertical-slice acceptance
+สถานะ 2026-10-24 (P1-WP3): AC-01 = PASS (golden expected outputs ยืนยันแล้ว 2026-10-24); AC-02 = PASS บน rule + local commit pipeline (backend ส่วน Phase 2 = NOT RUN); AC-03 = No-AI core portion PASS บน local file store (Drive/Sheets ส่วน Phase 2 = NOT RUN); AC-09/AC-11 มีหลักฐานบางส่วน (idempotent commit, last-known-good) แต่ยังไม่นับ PASS; AC อื่น = NOT RUN
 
 | ID | Scenario / pass criteria | Evidence ที่ต้องแนบ | Phase |
 |---|---|---|---|

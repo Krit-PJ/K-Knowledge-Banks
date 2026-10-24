@@ -90,6 +90,8 @@ for (const c of manifest.cases) {
   });
 }
 
-test('golden manifest is marked pending human confirmation', () => {
-  assert.equal(manifest.confirmationStatus, 'PENDING_HUMAN_CONFIRMATION');
+test('golden manifest is human-confirmed regression authority', () => {
+  assert.equal(manifest.confirmationStatus, 'CONFIRMED');
+  assert.equal(manifest.confirmation.confirmedBy, 'User');
+  assert.ok(manifest.confirmation.confirmedAt && manifest.confirmation.evidence);
 });

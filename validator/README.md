@@ -23,7 +23,7 @@ node validator/bin/kekb-validate.js <dir-or-file>...   # exit 0 = valid, 1 = iss
 
 Helpers: `checkPublication` (rule-level pre-check เท่านั้น ไม่เขียนข้อมูล), `countIndependentStudies`, `isApprovedFact`, `resolveTopicNavigation`, `areMeasuresComparable`
 
-## Binding assumptions ที่รอยืนยัน (PROJECT-STATE OD-06)
+## Confirmed bindings B1–B5 (OD-06 ปิดแล้ว: ผู้ใช้ยืนยัน 2026-10-24; การเปลี่ยนต้องผ่าน ADR)
 
 - B1 Trend `metric` และ `timeWindow {from,to}` อยู่ใน `DerivationRun.parameters`; `sourceSnapshot` = `inputSnapshot`; record ที่ไม่ใช่ DerivationRun อ้าง run ผ่าน `derivationRunRef` (Synthesis) หรือ `provenance.derivationRunRef`
 - B2 `ReviewSnapshot` ยกเว้นจาก authority rule (เป็น decision record เอง); `ReviewProtocol` ไม่ยกเว้น

@@ -6,12 +6,12 @@
     "v1.0-RC2"
   ],
   "ruleSetVersion": "p1-wp2-v1",
-  "confirmationStatus": "PENDING_HUMAN_CONFIRMATION",
+  "confirmationStatus": "CONFIRMED",
   "derivedFrom": [
     "phase1-manifest.json",
     "topics-v1.0-RC2.json"
   ],
-  "note": "Concrete record-shaped fixtures derived from the scenario manifests. Synthetic data only. Expected outputs are not regression authority until a human confirms them.",
+  "note": "Concrete record-shaped fixtures derived from the scenario manifests. Synthetic data only. Expected outputs confirmed by a human on 2026-10-24 and are regression authority.",
   "cases": [
     {
       "id": "GT-01",
@@ -627,5 +627,11 @@
         ]
       }
     }
-  ]
+  ],
+  "confirmation": {
+    "confirmedBy": "User",
+    "confirmedAt": "2026-10-24",
+    "evidence": "ผู้ใช้ตอบ “ยืนยัน ข้อ 1 และ 2, อนุม้ติ Phase 1 แต่ยังไม่เริ่ม Phase 2”",
+    "scope": "expected outputs of all 35 cases; changes require ADR + migration plan + User approval"
+  }
 }
