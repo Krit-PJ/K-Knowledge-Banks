@@ -6,7 +6,7 @@ Documentation pack: **v1.0-RC2**
 ## Current status
 - Current Phase = **Phase 2 — Knowledge Intake, Evidence & Human Review** (STARTED 2026-10-24)
 - Coding = STARTED (Phase 2 scope only; OD-03/OD-04 ตัดสินแล้ว 2026-10-24; OD-08 ยังเปิด)
-- Next = ติดตั้ง Apps Script ใน Sheet (ผู้ใช้ต้องอนุญาต OAuth) แล้วยืนยัน runSync จริง; จากนั้น P2-WP5 = web write endpoints (ต้องตัดสิน identity + OD-08)
+- Next = ทดสอบ Drive intake แบบ end-to-end ด้วยไฟล์จริง (ไฟล์ที่ผู้ใช้วางใน SourceAssets); จากนั้น P2-WP5 = web write endpoints (ต้องตัดสิน identity + OD-08)
 - Baseline = v1.0-RC2 (ADR-0001; RC1 retained for compatibility)
 - Master Development Prompt = v1.1 (operational consolidation)
 - Validator (P1-WP2) = DONE; GT-01..06,10,14..17 + RC1 compat = PASS (expected outputs PENDING_HUMAN_CONFIRMATION); AC-01 = PASS ระดับ validator; AC-02 = rule-level PASS / pipeline NOT RUN; GT-07,08,09,11,12,13 = NOT RUN
@@ -93,4 +93,8 @@ P2-WP4 (2026-10-24): `backend/apps-script/` (Lib.js pure logic + Code.js adapter
 
 Verification P2-WP4: `npm test` 79/79 (เพิ่ม Apps Script 11); mutation 5/5 ถูกจับ (หลังเพิ่ม test กรณี same-key rerun ที่พบจาก mutant A1 รอด); การรันจริงใน Apps Script = NOT RUN (ต้องติดตั้งและอนุญาต OAuth โดยผู้ใช้); canonical root `knowledge/` ยังไม่มีใน repo → คาดว่าได้ `NO_CANONICAL`
 
-Next packet: ติดตั้ง/ยืนยัน Apps Script จริง แล้ว P2-WP5 web write endpoints หลังตัดสิน identity + OD-08
+Deployment P2-WP4 (2026-10-24): สร้าง Apps Script project “KEKB Workflow Sync” ผูกกับ Sheet ผ่าน browser pane, ใส่โค้ดผ่าน editor API แล้วยืนยัน sha256 หลังรีโหลดตรง repo ทั้ง 3 ไฟล์ (Code bf37d8bb…, Lib 513709b6…, manifest 103bffe4…), ตั้ง Script Properties 4 ค่า; ผู้ใช้กดอนุญาต OAuth และรัน `setup` + `runSync` เอง
+
+Verification (จริง): AuditLog seq 1 `sync:intake` OK `NO_CHANGE` (0 files), seq 2 `sync:canonical` OK `NO_CANONICAL`; ทริกเกอร์ `runSync` แบบตามเวลา 1 ตัว; IntakeQueue/RecordStatus ว่างตามคาด. NOT RUN: intake กับไฟล์จริง และ canonical mirror กับ canonical จริง (ยังไม่มี `knowledge/` ใน repo)
+
+Next packet: e2e intake ด้วยไฟล์จริง แล้ว P2-WP5 web write endpoints หลังตัดสิน identity + OD-08
