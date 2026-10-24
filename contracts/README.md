@@ -9,4 +9,4 @@ Portable Phase 1 contract assets:
 - `schema/kekb-record-v1.0-RC2.schema.json` — RC1-compatible contract extended with ADR-0001 `topicIds`
 - `vocabulary/v1.0-RC2.json` — RC1 vocabulary plus approved topic taxonomy
 
-These files implement the approved binding documents. No backend runtime, framework or validator dependency has been selected. JSON syntax and internal references can be checked without making that decision; full schema execution remains `NOT RUN` until the validator runtime is approved.
+These files implement the approved binding documents. Validator runtime approved 2026-10-24: Node.js + Ajv 8 (see `validator/README.md`). Backend runtime/framework remain unselected. Schema execution and Phase 1 golden cases run via `npm test`.

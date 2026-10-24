@@ -1,0 +1,43 @@
+{
+  "id": "018f0000-0000-7000-8000-000000000030",
+  "type": "Evidence",
+  "schemaVersion": "v1.0-RC1",
+  "revision": 1,
+  "workflowState": "VALIDATED",
+  "createdAt": "2026-10-23T00:00:00.000Z",
+  "updatedAt": "2026-10-23T00:00:00.000Z",
+  "createdBy": "actor:fixture-contributor",
+  "updatedBy": "actor:fixture-contributor",
+  "provenance": {
+    "actorId": "actor:fixture-contributor",
+    "action": "manual-intake",
+    "timestamp": "2026-10-23T00:00:00.000Z",
+    "sourceRefs": []
+  },
+  "sourceAssetRef": {
+    "id": "018f0000-0000-7000-8000-000000000001",
+    "type": "SourceAsset",
+    "revision": 1
+  },
+  "reportRef": {
+    "id": "018f0000-0000-7000-8000-000000000020",
+    "type": "Report",
+    "revision": 1
+  },
+  "locator": {
+    "kind": "table",
+    "value": "Table 2"
+  },
+  "studyRefs": [
+    {
+      "id": "018f0000-0000-7000-8000-000000000010",
+      "type": "Study",
+      "revision": 1
+    }
+  ],
+  "originalExcerpt": {
+    "state": "KNOWN",
+    "value": "Synthetic excerpt for fixture use only."
+  },
+  "accessClassification": "PUBLIC"
+}

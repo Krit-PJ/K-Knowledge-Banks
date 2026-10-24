@@ -1,0 +1,54 @@
+{
+  "id": "018f0000-0000-7000-8000-000000000090",
+  "type": "RelationAssertion",
+  "schemaVersion": "v1.0-RC2",
+  "revision": 1,
+  "workflowState": "REVIEW_READY",
+  "createdAt": "2026-10-23T00:00:00.000Z",
+  "updatedAt": "2026-10-23T00:00:00.000Z",
+  "createdBy": "actor:fixture-contributor",
+  "updatedBy": "actor:fixture-contributor",
+  "provenance": {
+    "actorId": "actor:fixture-contributor",
+    "action": "manual-intake",
+    "timestamp": "2026-10-23T00:00:00.000Z",
+    "sourceRefs": []
+  },
+  "relationType": "SUPPORTS",
+  "targetRef": {
+    "id": "018f0000-0000-7000-8000-000000000080",
+    "type": "Claim",
+    "revision": 1
+  },
+  "participants": [
+    {
+      "roleId": "subject",
+      "literal": {
+        "state": "KNOWN",
+        "value": "fertilizer A"
+      }
+    },
+    {
+      "roleId": "object",
+      "literal": {
+        "state": "KNOWN",
+        "value": "yield"
+      }
+    },
+    {
+      "roleId": "condition",
+      "literal": {
+        "state": "KNOWN",
+        "value": "irrigated plots"
+      }
+    }
+  ],
+  "evidenceRefs": [
+    {
+      "id": "018f0000-0000-7000-8000-000000000030",
+      "type": "Evidence",
+      "revision": 1
+    }
+  ],
+  "reviewState": "REVIEW_READY"
+}

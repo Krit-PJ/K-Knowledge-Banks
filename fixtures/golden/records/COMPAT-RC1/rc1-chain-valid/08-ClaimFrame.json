@@ -1,0 +1,35 @@
+{
+  "id": "018f0000-0000-7000-8000-000000000070",
+  "type": "ClaimFrame",
+  "schemaVersion": "v1.0-RC1",
+  "revision": 1,
+  "workflowState": "VALIDATED",
+  "createdAt": "2026-10-23T00:00:00.000Z",
+  "updatedAt": "2026-10-23T00:00:00.000Z",
+  "createdBy": "actor:fixture-contributor",
+  "updatedBy": "actor:fixture-contributor",
+  "provenance": {
+    "actorId": "actor:fixture-contributor",
+    "action": "manual-intake",
+    "timestamp": "2026-10-23T00:00:00.000Z",
+    "sourceRefs": []
+  },
+  "predicateId": "increases",
+  "participants": [
+    {
+      "roleId": "subject",
+      "literal": {
+        "state": "KNOWN",
+        "value": "fertilizer A"
+      }
+    },
+    {
+      "roleId": "outcome",
+      "literal": {
+        "state": "KNOWN",
+        "value": "yield"
+      }
+    }
+  ],
+  "qualifiers": []
+}

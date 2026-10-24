@@ -1,0 +1,44 @@
+{
+  "id": "018f0000-0000-7000-8000-000000000110",
+  "type": "ReviewSnapshot",
+  "schemaVersion": "v1.0-RC2",
+  "revision": 1,
+  "workflowState": "COMMITTED",
+  "createdAt": "2026-10-23T00:00:00.000Z",
+  "updatedAt": "2026-10-23T00:00:00.000Z",
+  "createdBy": "actor:fixture-contributor",
+  "updatedBy": "actor:fixture-contributor",
+  "provenance": {
+    "actorId": "actor:fixture-contributor",
+    "action": "manual-intake",
+    "timestamp": "2026-10-23T00:00:00.000Z",
+    "sourceRefs": []
+  },
+  "targetRefs": [
+    {
+      "id": "018f0000-0000-7000-8000-000000000080",
+      "type": "Claim",
+      "revision": 1
+    }
+  ],
+  "evidenceRefs": [
+    {
+      "id": "018f0000-0000-7000-8000-000000000030",
+      "type": "Evidence",
+      "revision": 1
+    }
+  ],
+  "protocolRef": {
+    "id": "018f0000-0000-7000-8000-000000000100",
+    "type": "ReviewProtocol",
+    "revision": 1
+  },
+  "validationResult": "PASS",
+  "reviewerId": "actor:fixture-reviewer",
+  "decision": "APPROVE",
+  "reason": {
+    "th": "ตรวจแล้ว",
+    "en": "Reviewed"
+  },
+  "decidedAt": "2026-10-23T00:00:00.000Z"
+}

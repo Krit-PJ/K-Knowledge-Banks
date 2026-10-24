@@ -1,0 +1,30 @@
+{
+  "id": "018f0000-0000-7000-8000-000000000001",
+  "type": "SourceAsset",
+  "schemaVersion": "v1.0-RC1",
+  "revision": 1,
+  "workflowState": "VALIDATED",
+  "createdAt": "2026-10-23T00:00:00.000Z",
+  "updatedAt": "2026-10-23T00:00:00.000Z",
+  "createdBy": "actor:fixture-contributor",
+  "updatedBy": "actor:fixture-contributor",
+  "provenance": {
+    "actorId": "actor:fixture-contributor",
+    "action": "manual-intake",
+    "timestamp": "2026-10-23T00:00:00.000Z",
+    "sourceRefs": []
+  },
+  "sourceKind": "synthetic-journal-article",
+  "sourceVersion": "v1",
+  "hash": {
+    "algorithm": "sha256",
+    "digest": "1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "accessClassification": "PUBLIC",
+  "originalLanguage": "en",
+  "storageRef": "synthetic:source/sa1",
+  "locatorCapabilities": [
+    "page",
+    "table"
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "id": "018f0000-0000-7000-8000-000000000260",
+  "type": "Finding",
+  "schemaVersion": "v1.0-RC2",
+  "revision": 1,
+  "workflowState": "VALIDATED",
+  "createdAt": "2026-10-23T00:00:00.000Z",
+  "updatedAt": "2026-10-23T00:00:00.000Z",
+  "createdBy": "actor:fixture-contributor",
+  "updatedBy": "actor:fixture-contributor",
+  "provenance": {
+    "actorId": "actor:fixture-contributor",
+    "action": "manual-intake",
+    "timestamp": "2026-10-23T00:00:00.000Z",
+    "sourceRefs": [],
+    "derivationRunRef": {
+      "id": "018f0000-0000-7000-8000-000000000270",
+      "type": "DerivationRun",
+      "revision": 1
+    }
+  },
+  "topicIds": [
+    "trends.github-popular-skills"
+  ],
+  "resultRefs": [
+    {
+      "id": "018f0000-0000-7000-8000-000000000250",
+      "type": "Result",
+      "revision": 1
+    }
+  ],
+  "explanation": {
+    "th": "ตัวอย่างผลจัดอันดับสมมติ",
+    "en": "Synthetic ranking example"
+  },
+  "context": {
+    "state": "KNOWN",
+    "value": "2026-09-01..2026-10-01"
+  },
+  "evidenceRefs": [
+    {
+      "id": "018f0000-0000-7000-8000-000000000230",
+      "type": "Evidence",
+      "revision": 1
+    }
+  ]
+}

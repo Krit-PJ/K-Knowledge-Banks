@@ -1,0 +1,19 @@
+{
+  "name": "kekb",
+  "version": "0.1.0",
+  "private": true,
+  "description": "K-Knowledge Bank — Phase 1 deterministic validator (P1-WP2)",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "validate": "node validator/bin/kekb-validate.js",
+    "test": "node --test \"validator/test/*.test.js\"",
+    "test:golden": "node --test validator/test/golden.test.js"
+  },
+  "devDependencies": {
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1"
+  }
+}

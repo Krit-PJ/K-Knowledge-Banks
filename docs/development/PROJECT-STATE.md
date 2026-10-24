@@ -1,15 +1,15 @@
 # Project State
 
 Documentation pack: **v1.0-RC2**
-วันที่จัดทำ: 2026-10-23 (Asia/Bangkok)
+วันที่จัดทำ: 2026-10-23 (Asia/Bangkok) · ปรับปรุงล่าสุด: 2026-10-24 (P1-WP2)
 
 ## Current status
 - Current Phase = Phase 1 — Foundation & No-AI Vertical Slice
 - Coding = STARTED (Phase 1 scope only)
-- Next = Approve validator runtime/tooling, then implement deterministic validation for RC1/RC2 and executable GT-01..17 Phase 1 cases
+- Next = ผู้ใช้ยืนยัน golden expected outputs + binding assumptions OD-06 แล้วจึงเริ่ม P1-WP3 (No-AI vertical slice, GT-12)
 - Baseline = v1.0-RC2 (ADR-0001; RC1 retained for compatibility)
 - Master Development Prompt = v1.1 (operational consolidation)
-- Application acceptance / Golden Tests = NOT RUN
+- Validator (P1-WP2) = DONE; GT-01..06,10,14..17 + RC1 compat = PASS (expected outputs PENDING_HUMAN_CONFIRMATION); AC-01 = PASS ระดับ validator; AC-02 = rule-level PASS / pipeline NOT RUN; GT-07,08,09,11,12,13 = NOT RUN
 - Phase 1 = STARTED; Phase 2–4 = NOT STARTED
 
 ## Inventory before changes
@@ -26,6 +26,8 @@ Documentation pack: **v1.0-RC2**
 | OD-03 | API endpoints/payloads/pagination/idempotency limits | ยืนยัน API surface ก่อน implementation ที่พึ่งพา |
 | OD-04 | backend/auth provider, roles, public/private canonical, source permissions, backup/retention | ตัดสิน security/deployment boundaries ก่อน integration ที่พึ่งพา |
 | OD-05 | phase allocation และ MVP 2D optional/3D deferred | ผู้ใช้ยืนยัน scope และ phase prompts |
+| OD-06 | P1-WP2 binding assumptions B1–B5 ([validator/README](../../validator/README.md)) และ golden expected outputs ใน `fixtures/golden/records/cases.json` | ผู้ใช้ยืนยันหรือแก้; ถ้าแก้ semantic ใช้ ADR |
+| OD-07 | Metadata ไม่สอดคล้อง: `AGENTS.md:6` ระบุ baseline RC1, `PHASE-1..4.md:3` ระบุ pack RC1, `topics-v1.0-RC2.proposed.json` ยังชื่อ proposed | แก้ใน packet แยกเมื่อผู้ใช้อนุมัติ (ไม่กระทบ semantic) |
 
 ไม่มีความขัดแย้งกับไฟล์เดิม เพราะไม่มีไฟล์งานเดิม แต่ยังไม่สามารถยืนยันความตรงกับต้นฉบับแชตเต็มได้ ประเด็น OD เป็นข้อจำกัดของการ consolidate ไม่ใช่ข้ออนุมัติที่ได้รับแล้ว
 
@@ -38,6 +40,8 @@ Documentation pack: **v1.0-RC2**
 | Align workflow/roles/Phase 1 และจัดทำ schema/vocabulary proposal | AUTHORIZED | ผู้ใช้ตอบ “จัดการต่อได้” วันที่ 2026-10-23; ไม่ใช่อนุมัติ proposal หรือ Application Code |
 | เริ่ม Phase 1 | AUTHORIZED | ผู้ใช้ตอบ “อนุมัติ Proposal และเริ่ม Phase 1” วันที่ 2026-10-23; scope = Foundation & No-AI Vertical Slice |
 | ADR-0001 topic taxonomy | ACCEPTED | ผู้ใช้ตอบ “อนุมัติ ADR-0001” วันที่ 2026-10-23; scope = topic IDs, optional `topicIds`, RC2 migration และ GT-16/17 |
+| P1-WP2 validator runtime/tooling | AUTHORIZED | ผู้ใช้ตอบ “A, อนุมัติ 1-2-3-4” วันที่ 2026-10-24; scope = Node.js + Ajv 8, ติดตั้ง dev dependency (exact + lockfile), สร้าง concrete fixtures (expected outputs รอยืนยัน), baseline Git commit local (ไม่ push) |
+| Commit P1-WP2, แก้ OD-07, P1-WP3 storage = local files | AUTHORIZED | ผู้ใช้ตอบ “อนุมัติ commit, แก้ OD-07, P1-WP3 ใช้ไฟล์ local” วันที่ 2026-10-24; commit local เท่านั้น ไม่ push; OD-06 ยังไม่ได้รับการยืนยัน |
 | Phase 1 → Phase 2 | PENDING | ยังไม่มี |
 | Phase 2 → Phase 3 | PENDING | ยังไม่มี |
 | Phase 3 → Phase 4 | PENDING | ยังไม่มี |
@@ -54,4 +58,8 @@ ADR-0001 implementation: สร้าง RC2 schema/vocabulary และ GT-16/1
 
 Prompt engineering: เพิ่ม `docs/prompts/KEKB-MASTER-ENGINEERING-PROMPT.md` และ `WORK-PACKET-PROMPT-TEMPLATE.md` เป็น operational entry point ที่อ่าน live state/baseline ทุกครั้ง; ไม่เปลี่ยน Architecture หรือ approval gates
 
-Next packet: ขออนุมัติ validator runtime/tooling ก่อนสร้าง deterministic validator และ executable golden cases ห้ามเลือก runtime/framework/dependency เงียบ ๆ
+P1-WP2 (2026-10-24): baseline commit `400d492` (local); ติดตั้ง ajv 8.20.0 + ajv-formats 3.0.1 (devDependencies, exact, `package-lock.json`); สร้าง `validator/` (strict loader, schema dispatch ต่อ version, cross-record rules, CLI, stable safe codes) และ concrete fixtures 35 variants ใน `fixtures/golden/records/` (scenario manifests เดิมไม่ถูกแก้)
+
+Verification P1-WP2: `npm test` → contracts 7/7, strict-json 6/6, golden 36/36 PASS; mutation check 6/6 rule mutants ถูกจับโดย case ที่ถูกต้อง; CLI exit 0/1 ตรง; issue output ไม่ echo marker ค่า input. Ajv strict lint `strictTypes`/`strictRequired` ถูก log (contract ผ่าน 2020-12 metaschema; ไม่แก้ contract) ข้อจำกัด: การ import Ajv ใน VM ผ่าน OneDrive mount ใช้ ~9 วินาที (I/O ไม่ใช่ CPU)
+
+Next packet: P1-WP3 No-AI vertical slice (manual intake → validation → human review → approval → canonical commit → read model → search/evidence trace, GT-12) หลังผู้ใช้ปิด OD-06; runtime/storage ของ slice ยังต้องอนุมัติแยก ห้ามเลือกเงียบ ๆ

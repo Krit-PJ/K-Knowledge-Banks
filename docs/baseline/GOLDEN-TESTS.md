@@ -3,7 +3,7 @@
 Baseline version: **v1.0-RC2**
 วันที่จัดทำ: 2026-10-23 (Asia/Bangkok)
 
-สร้าง synthetic Phase 1 fixture manifest แล้วที่ [`fixtures/golden/phase1-manifest.json`](../../fixtures/golden/phase1-manifest.json) แต่ยังไม่ได้สร้าง validator runner หรือรัน expected outcomes ผล GT ทั้งหมดยังคง = NOT RUN
+Scenario manifests: [`phase1-manifest.json`](../../fixtures/golden/phase1-manifest.json), [`topics-v1.0-RC2.json`](../../fixtures/golden/topics-v1.0-RC2.json). Concrete record fixtures + expected outputs: [`records/cases.json`](../../fixtures/golden/records/cases.json) (P1-WP2, 2026-10-24) รันด้วย `npm test`; GT-01..06,10,14..17 = PASS ตาม expected outputs ที่ยัง **PENDING_HUMAN_CONFIRMATION** จึงยังไม่เป็น regression authority; GT-07,08,09,11,12,13 = NOT RUN
 
 ใช้ข้อมูลสมมติ ไม่มี PII/source จริง แต่ละ fixture ต้องตรึง input revisions, schema/vocabulary/rule/protocol versions, expected result และเหตุผล เปรียบเทียบ semantic output หลัง normalize ลำดับ; ไม่ผูก timestamp/run ID ที่เปลี่ยนทุกครั้ง
 

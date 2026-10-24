@@ -1,0 +1,29 @@
+{
+  "id": "018f0000-0000-7000-8000-000000000200",
+  "type": "SourceAsset",
+  "schemaVersion": "v1.0-RC2",
+  "revision": 1,
+  "workflowState": "VALIDATED",
+  "createdAt": "2026-10-23T00:00:00.000Z",
+  "updatedAt": "2026-10-23T00:00:00.000Z",
+  "createdBy": "actor:fixture-contributor",
+  "updatedBy": "actor:fixture-contributor",
+  "provenance": {
+    "actorId": "actor:fixture-contributor",
+    "action": "manual-intake",
+    "timestamp": "2026-10-23T00:00:00.000Z",
+    "sourceRefs": []
+  },
+  "sourceKind": "synthetic-github-api-snapshot",
+  "sourceVersion": "collected-2026-10-01",
+  "hash": {
+    "algorithm": "sha256",
+    "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "accessClassification": "PUBLIC",
+  "originalLanguage": "en",
+  "storageRef": "synthetic:source/github-snapshot",
+  "locatorCapabilities": [
+    "row"
+  ]
+}

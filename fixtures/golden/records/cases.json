@@ -1,0 +1,631 @@
+{
+  "fixtureSet": "phase1-records-v1.0-RC2",
+  "baseline": "v1.0-RC2",
+  "schemaVersions": [
+    "v1.0-RC1",
+    "v1.0-RC2"
+  ],
+  "ruleSetVersion": "p1-wp2-v1",
+  "confirmationStatus": "PENDING_HUMAN_CONFIRMATION",
+  "derivedFrom": [
+    "phase1-manifest.json",
+    "topics-v1.0-RC2.json"
+  ],
+  "note": "Concrete record-shaped fixtures derived from the scenario manifests. Synthetic data only. Expected outputs are not regression authority until a human confirms them.",
+  "cases": [
+    {
+      "id": "GT-01",
+      "variant": "one-study-two-reports",
+      "dir": "GT-01/one-study-two-reports",
+      "operation": {
+        "kind": "independence",
+        "evidenceRefs": [
+          {
+            "id": "018f0000-0000-7000-8000-000000000030",
+            "type": "Evidence",
+            "revision": 1
+          },
+          {
+            "id": "018f0000-0000-7000-8000-000000000031",
+            "type": "Evidence",
+            "revision": 1
+          }
+        ]
+      },
+      "expected": {
+        "validation": "PASS",
+        "studyCount": 1,
+        "reportCount": 2,
+        "independentStudyCount": 1
+      }
+    },
+    {
+      "id": "GT-01",
+      "variant": "two-studies-shared-cohort",
+      "dir": "GT-01/two-studies-shared-cohort",
+      "operation": {
+        "kind": "independence",
+        "evidenceRefs": [
+          {
+            "id": "018f0000-0000-7000-8000-000000000030",
+            "type": "Evidence",
+            "revision": 1
+          },
+          {
+            "id": "018f0000-0000-7000-8000-000000000031",
+            "type": "Evidence",
+            "revision": 1
+          }
+        ]
+      },
+      "expected": {
+        "validation": "PASS",
+        "studyCount": 2,
+        "reportCount": 2,
+        "independentStudyCount": 1
+      },
+      "note": "shared dependencyKey: not independent"
+    },
+    {
+      "id": "GT-01",
+      "variant": "two-independent-studies",
+      "dir": "GT-01/two-independent-studies",
+      "operation": {
+        "kind": "independence",
+        "evidenceRefs": [
+          {
+            "id": "018f0000-0000-7000-8000-000000000030",
+            "type": "Evidence",
+            "revision": 1
+          },
+          {
+            "id": "018f0000-0000-7000-8000-000000000031",
+            "type": "Evidence",
+            "revision": 1
+          }
+        ]
+      },
+      "expected": {
+        "validation": "PASS",
+        "studyCount": 2,
+        "reportCount": 2,
+        "independentStudyCount": 2
+      },
+      "note": "control: distinct dependencyKeys"
+    },
+    {
+      "id": "GT-02",
+      "variant": "one-report-two-studies",
+      "dir": "GT-02/one-report-two-studies",
+      "operation": {
+        "kind": "validate"
+      },
+      "expected": {
+        "validation": "PASS",
+        "studyCount": 2,
+        "reportCount": 1
+      }
+    },
+    {
+      "id": "GT-03",
+      "variant": "result-finding-claim-chain",
+      "dir": "GT-03/result-finding-claim-chain",
+      "operation": {
+        "kind": "validate"
+      },
+      "expected": {
+        "validation": "PASS",
+        "recordTypes": [
+          "Result",
+          "Finding",
+          "Claim"
+        ],
+        "merged": false
+      }
+    },
+    {
+      "id": "GT-03",
+      "variant": "claim-cites-result-as-evidence",
+      "dir": "GT-03/claim-cites-result-as-evidence",
+      "operation": {
+        "kind": "validate"
+      },
+      "expected": {
+        "validation": "FAIL",
+        "codes": [
+          "REF_FIELD_TYPE_INVALID"
+        ]
+      },
+      "note": "Result is not Evidence"
+    },
+    {
+      "id": "GT-04",
+      "variant": "claim-without-evidence",
+      "dir": "GT-04/claim-without-evidence",
+      "operation": {
+        "kind": "publish",
+        "target": {
+          "id": "018f0000-0000-7000-8000-000000000080",
+          "type": "Claim",
+          "revision": 1
+        }
+      },
+      "expected": {
+        "validation": "FAIL",
+        "codes": [
+          "MISSING_EVIDENCE"
+        ],
+        "publishBlocked": true
+      }
+    },
+    {
+      "id": "GT-04",
+      "variant": "evidence-without-locator",
+      "dir": "GT-04/evidence-without-locator",
+      "operation": {
+        "kind": "publish",
+        "target": {
+          "id": "018f0000-0000-7000-8000-000000000080",
+          "type": "Claim",
+          "revision": 1
+        }
+      },
+      "expected": {
+        "validation": "FAIL",
+        "codes": [
+          "MISSING_LOCATOR",
+          "NULL_NOT_ALLOWED"
+        ],
+        "publishBlocked": true
+      }
+    },
+    {
+      "id": "GT-04",
+      "variant": "locator-not-supported-by-source",
+      "dir": "GT-04/locator-not-supported-by-source",
+      "operation": {
+        "kind": "validate"
+      },
+      "expected": {
+        "validation": "FAIL",
+        "codes": [
+          "LOCATOR_NOT_SUPPORTED"
+        ]
+      },
+      "note": "locator kind not in SourceAsset.locatorCapabilities"
+    },
+    {
+      "id": "GT-05",
+      "variant": "n-ary-claim-frame",
+      "dir": "GT-05/n-ary-claim-frame",
+      "operation": {
+        "kind": "claimFrame",
+        "recordId": "018f0000-0000-7000-8000-000000000070"
+      },
+      "expected": {
+        "validation": "PASS",
+        "preservedRoles": [
+          "subject",
+          "intervention",
+          "comparator",
+          "population",
+          "outcome",
+          "time"
+        ],
+        "flattenedToTriple": false
+      }
+    },
+    {
+      "id": "GT-05",
+      "variant": "duplicate-subject-role",
+      "dir": "GT-05/duplicate-subject-role",
+      "operation": {
+        "kind": "validate"
+      },
+      "expected": {
+        "validation": "FAIL",
+        "codes": [
+          "PARTICIPANT_ROLE_CARDINALITY"
+        ]
+      }
+    },
+    {
+      "id": "GT-06",
+      "variant": "relation-awaiting-review",
+      "dir": "GT-06/relation-awaiting-review",
+      "operation": {
+        "kind": "approvedFact",
+        "target": {
+          "id": "018f0000-0000-7000-8000-000000000090",
+          "type": "RelationAssertion",
+          "revision": 1
+        }
+      },
+      "expected": {
+        "validation": "PASS",
+        "approvedFact": false
+      }
+    },
+    {
+      "id": "GT-06",
+      "variant": "self-approved-without-review",
+      "dir": "GT-06/self-approved-without-review",
+      "operation": {
+        "kind": "validate"
+      },
+      "expected": {
+        "validation": "FAIL",
+        "codes": [
+          "APPROVAL_REQUIRED"
+        ]
+      },
+      "note": "human authority must not be bypassed"
+    },
+    {
+      "id": "GT-10",
+      "variant": "approved-rev1-control",
+      "dir": "GT-10/approved-rev1-control",
+      "operation": {
+        "kind": "publish",
+        "target": {
+          "id": "018f0000-0000-7000-8000-000000000080",
+          "type": "Claim",
+          "revision": 1
+        }
+      },
+      "expected": {
+        "validation": "PASS",
+        "publishable": true
+      },
+      "note": "positive control"
+    },
+    {
+      "id": "GT-10",
+      "variant": "publish-rev2-with-rev1-snapshot",
+      "dir": "GT-10/publish-rev2-with-rev1-snapshot",
+      "operation": {
+        "kind": "publish",
+        "target": {
+          "id": "018f0000-0000-7000-8000-000000000080",
+          "type": "Claim",
+          "revision": 2
+        }
+      },
+      "expected": {
+        "validation": "PASS",
+        "publishBlocked": true,
+        "codes": [
+          "REVISION_MISMATCH"
+        ]
+      }
+    },
+    {
+      "id": "GT-10",
+      "variant": "rev2-marked-approved-with-rev1-snapshot",
+      "dir": "GT-10/rev2-marked-approved-with-rev1-snapshot",
+      "operation": {
+        "kind": "validate"
+      },
+      "expected": {
+        "validation": "FAIL",
+        "codes": [
+          "REVISION_MISMATCH"
+        ]
+      }
+    },
+    {
+      "id": "GT-14",
+      "variant": "dangling-ref",
+      "dir": "GT-14/dangling-ref",
+      "operation": {
+        "kind": "validate"
+      },
+      "expected": {
+        "validation": "FAIL",
+        "codes": [
+          "DANGLING_REF"
+        ]
+      }
+    },
+    {
+      "id": "GT-14",
+      "variant": "duplicate-id",
+      "dir": "GT-14/duplicate-id",
+      "operation": {
+        "kind": "validate"
+      },
+      "expected": {
+        "validation": "FAIL",
+        "codes": [
+          "DUPLICATE_ID"
+        ],
+        "mustNotEcho": "SECRET-MARKER-DO-NOT-ECHO"
+      }
+    },
+    {
+      "id": "GT-14",
+      "variant": "unsupported-version",
+      "dir": "GT-14/unsupported-version",
+      "operation": {
+        "kind": "validate"
+      },
+      "expected": {
+        "validation": "FAIL",
+        "codes": [
+          "SCHEMA_VERSION_UNSUPPORTED"
+        ],
+        "mustNotEcho": "SECRET-MARKER-DO-NOT-ECHO"
+      }
+    },
+    {
+      "id": "GT-14",
+      "variant": "ref-type-mismatch",
+      "dir": "GT-14/ref-type-mismatch",
+      "operation": {
+        "kind": "validate"
+      },
+      "expected": {
+        "validation": "FAIL",
+        "codes": [
+          "REF_TYPE_MISMATCH"
+        ]
+      }
+    },
+    {
+      "id": "GT-14",
+      "variant": "unknown-field-rejected",
+      "dir": "GT-14/unknown-field-rejected",
+      "operation": {
+        "kind": "validate"
+      },
+      "expected": {
+        "validation": "FAIL",
+        "codes": [
+          "SCHEMA_VIOLATION"
+        ],
+        "mustNotEcho": "SECRET-MARKER-DO-NOT-ECHO"
+      }
+    },
+    {
+      "id": "GT-15",
+      "variant": "units-contexts-and-absence-states",
+      "dir": "GT-15/units-contexts-and-absence-states",
+      "operation": {
+        "kind": "measures",
+        "pair": [
+          {
+            "id": "018f0000-0000-7000-8000-000000000050",
+            "type": "Result",
+            "revision": 1
+          },
+          {
+            "id": "018f0000-0000-7000-8000-000000000051",
+            "type": "Result",
+            "revision": 1
+          }
+        ],
+        "studyRef": {
+          "id": "018f0000-0000-7000-8000-000000000010",
+          "type": "Study",
+          "revision": 1
+        }
+      },
+      "expected": {
+        "validation": "PASS",
+        "mergedMeasures": false,
+        "collapsedValueStates": false,
+        "preservedStates": {
+          "design": "UNKNOWN",
+          "context": "NOT_APPLICABLE"
+        }
+      }
+    },
+    {
+      "id": "GT-15",
+      "variant": "unknown-state-with-value",
+      "dir": "GT-15/unknown-state-with-value",
+      "operation": {
+        "kind": "validate"
+      },
+      "expected": {
+        "validation": "FAIL",
+        "codes": [
+          "SCHEMA_VIOLATION"
+        ]
+      }
+    },
+    {
+      "id": "GT-15",
+      "variant": "null-instead-of-value-state",
+      "dir": "GT-15/null-instead-of-value-state",
+      "operation": {
+        "kind": "validate"
+      },
+      "expected": {
+        "validation": "FAIL",
+        "codes": [
+          "NULL_NOT_ALLOWED"
+        ]
+      }
+    },
+    {
+      "id": "GT-16",
+      "variant": "known-multiple-leaf-topics",
+      "dir": "GT-16/known-multiple-leaf-topics",
+      "operation": {
+        "kind": "navigation",
+        "target": {
+          "id": "018f0000-0000-7000-8000-000000000060",
+          "type": "Finding",
+          "revision": 1
+        }
+      },
+      "expected": {
+        "validation": "PASS",
+        "parentNavigation": [
+          "news",
+          "trends"
+        ],
+        "canonicalIdsPreserved": true
+      }
+    },
+    {
+      "id": "GT-16",
+      "variant": "unknown-topic",
+      "dir": "GT-16/unknown-topic",
+      "operation": {
+        "kind": "validate"
+      },
+      "expected": {
+        "validation": "FAIL",
+        "codes": [
+          "UNKNOWN_TOPIC_ID"
+        ]
+      }
+    },
+    {
+      "id": "GT-16",
+      "variant": "duplicate-topic",
+      "dir": "GT-16/duplicate-topic",
+      "operation": {
+        "kind": "validate"
+      },
+      "expected": {
+        "validation": "FAIL",
+        "codes": [
+          "DUPLICATE_TOPIC_ID"
+        ]
+      }
+    },
+    {
+      "id": "GT-16",
+      "variant": "topic-not-applicable-to-type",
+      "dir": "GT-16/topic-not-applicable-to-type",
+      "operation": {
+        "kind": "validate"
+      },
+      "expected": {
+        "validation": "FAIL",
+        "codes": [
+          "TOPIC_NOT_APPLICABLE"
+        ]
+      }
+    },
+    {
+      "id": "GT-17",
+      "variant": "reproducible-github-popularity",
+      "dir": "GT-17/reproducible-github-popularity",
+      "operation": {
+        "kind": "reproducible",
+        "target": {
+          "id": "018f0000-0000-7000-8000-000000000260",
+          "type": "Finding",
+          "revision": 1
+        }
+      },
+      "expected": {
+        "validation": "PASS",
+        "reproducible": true
+      }
+    },
+    {
+      "id": "GT-17",
+      "variant": "popularity-without-time-window",
+      "dir": "GT-17/popularity-without-time-window",
+      "operation": {
+        "kind": "publish",
+        "target": {
+          "id": "018f0000-0000-7000-8000-000000000260",
+          "type": "Finding",
+          "revision": 1
+        }
+      },
+      "expected": {
+        "validation": "FAIL",
+        "codes": [
+          "MISSING_TREND_TIME_WINDOW"
+        ],
+        "publishBlocked": true
+      }
+    },
+    {
+      "id": "GT-17",
+      "variant": "popularity-without-metric",
+      "dir": "GT-17/popularity-without-metric",
+      "operation": {
+        "kind": "publish",
+        "target": {
+          "id": "018f0000-0000-7000-8000-000000000260",
+          "type": "Finding",
+          "revision": 1
+        }
+      },
+      "expected": {
+        "validation": "FAIL",
+        "codes": [
+          "MISSING_TREND_METRIC"
+        ],
+        "publishBlocked": true
+      }
+    },
+    {
+      "id": "GT-17",
+      "variant": "finding-without-derivation-run",
+      "dir": "GT-17/finding-without-derivation-run",
+      "operation": {
+        "kind": "publish",
+        "target": {
+          "id": "018f0000-0000-7000-8000-000000000260",
+          "type": "Finding",
+          "revision": 1
+        }
+      },
+      "expected": {
+        "validation": "FAIL",
+        "codes": [
+          "MISSING_TREND_DERIVATION_RUN"
+        ],
+        "publishBlocked": true
+      }
+    },
+    {
+      "id": "GT-17",
+      "variant": "inverted-time-window",
+      "dir": "GT-17/inverted-time-window",
+      "operation": {
+        "kind": "validate"
+      },
+      "expected": {
+        "validation": "FAIL",
+        "codes": [
+          "INVALID_TREND_TIME_WINDOW"
+        ]
+      }
+    },
+    {
+      "id": "COMPAT-RC1",
+      "variant": "rc1-chain-valid",
+      "dir": "COMPAT-RC1/rc1-chain-valid",
+      "operation": {
+        "kind": "validate"
+      },
+      "expected": {
+        "validation": "PASS"
+      }
+    },
+    {
+      "id": "COMPAT-RC1",
+      "variant": "rc1-rejects-topicIds",
+      "dir": "COMPAT-RC1/rc1-rejects-topicIds",
+      "operation": {
+        "kind": "validate"
+      },
+      "expected": {
+        "validation": "FAIL",
+        "codes": [
+          "SCHEMA_VIOLATION"
+        ]
+      }
+    }
+  ]
+}

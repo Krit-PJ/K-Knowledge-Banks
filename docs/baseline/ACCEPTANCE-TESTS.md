@@ -3,7 +3,7 @@
 Baseline version: **v1.0-RC1**
 วันที่จัดทำ: 2026-10-23 (Asia/Bangkok)
 
-มี portable Phase 1 contracts แล้วแต่ยังไม่มี validator runner/vertical slice: ทุก AC = NOT RUN การตรวจ JSON/reference consistency ผ่านไม่ใช่ application acceptance ผ่าน
+สถานะ 2026-10-24 (P1-WP2): AC-01 = PASS ระดับ validator (รอยืนยัน golden expected outputs); AC-02 = PASS เฉพาะ rule-level pre-check (GT-04,10) ส่วน publication pipeline = NOT RUN; AC อื่น = NOT RUN การตรวจ validator ไม่ใช่ application/vertical-slice acceptance
 
 | ID | Scenario / pass criteria | Evidence ที่ต้องแนบ | Phase |
 |---|---|---|---|
