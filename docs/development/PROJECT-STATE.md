@@ -6,7 +6,7 @@ Documentation pack: **v1.0-RC2**
 ## Current status
 - Current Phase = **Phase 2 — Knowledge Intake, Evidence & Human Review** (STARTED 2026-10-24)
 - Coding = STARTED (Phase 2 scope only; OD-03/OD-04 ตัดสินแล้ว 2026-10-24; OD-08 ยังเปิด)
-- Next = push repo ขึ้น GitHub `Krit-PJ/K-Knowledge-Banks` (Public) + เปิด GitHub Pages frontend shell (P2-WP3) — รอผู้ใช้เชื่อม GitHub connector; จากนั้น P2-WP4 backend (Cloud Run + Google Sign-In) หลังตัดสิน OD-08
+- Next = P2-WP4 backend (Cloud Run + Google Sign-In) + Sheets/Drive sync — ต้องตัดสิน OD-08 และผู้ใช้ตั้ง GCP project/billing/service account ก่อน
 - Baseline = v1.0-RC2 (ADR-0001; RC1 retained for compatibility)
 - Master Development Prompt = v1.1 (operational consolidation)
 - Validator (P1-WP2) = DONE; GT-01..06,10,14..17 + RC1 compat = PASS (expected outputs PENDING_HUMAN_CONFIRMATION); AC-01 = PASS ระดับ validator; AC-02 = rule-level PASS / pipeline NOT RUN; GT-07,08,09,11,12,13 = NOT RUN
@@ -84,4 +84,8 @@ P2-WP2 (2026-10-24): ผู้ใช้สั่งใช้ Drive folder “4. 
 
 Verification P2-WP2: อ่านไฟล์หลัง upload ผ่าน Drive → 7 tabs, headers ครบตาม contract, Vocab ตรง vocabulary RC2; data validation ใน Google Sheets = NOT VERIFIED (Drive read ไม่แสดง); known issue: README บางบรรทัดในพจนานุกรมคอลัมน์ (timestamp columns) อธิบายผิดว่า "ค่าจาก Vocab" — แก้ได้เมื่อเปิด Google Sheets connector; ยังไม่มี sync อัตโนมัติ (รอ OD-04)
 
-Next packet: P2-WP3 GitHub repo + Pages frontend shell; แล้ว P2-WP4 backend (Cloud Run + Google Sign-In) + Sheets/Drive sync
+P2-WP3 (2026-10-24): สร้าง GitHub repo `Krit-PJ/K-Knowledge-Banks` (Public) ผ่านเบราว์เซอร์, ตั้ง Pages source = GitHub Actions, push `main` ผ่าน Claude GitHub App (ผู้ใช้ติดตั้งแบบ select repository เดียว); commit author/committer ถูก rewrite เป็น GitHub noreply ก่อน push
+
+Verification P2-WP3: pre-push scan ทั้ง working tree + history ไม่พบ secret/token/Drive ID/อีเมล; clean clone `npm ci && npm test` 68/68; GitHub Actions run `test-and-deploy-pages` → test: success, deploy: success; https://krit-pj.github.io/K-Knowledge-Banks/ โหลดได้และแสดง frontend shell ภาษาไทย (ไม่มีข้อมูลความรู้). ข้อจำกัด: PROJECT-STATE มี local path ของเครื่องผู้ใช้ (ความเสี่ยงต่ำ, ผู้ใช้รับทราบ)
+
+Next packet: P2-WP4 backend (Cloud Run + Google Sign-In) + Sheets/Drive sync หลังปิด OD-08 และตั้ง GCP
