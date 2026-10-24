@@ -1,12 +1,12 @@
 # Project State
 
 Documentation pack: **v1.0-RC2**
-วันที่จัดทำ: 2026-10-23 (Asia/Bangkok) · ปรับปรุงล่าสุด: 2026-10-24 (เริ่ม Phase 2)
+วันที่จัดทำ: 2026-10-23 (Asia/Bangkok) · ปรับปรุงล่าสุด: 2026-10-25 (P2-WP5 deployed)
 
 ## Current status
 - Current Phase = **Phase 2 — Knowledge Intake, Evidence & Human Review** (STARTED 2026-10-24)
-- Coding = STARTED (Phase 2 scope only; OD-03/OD-04 ตัดสินแล้ว 2026-10-24; OD-08 ยังเปิด)
-- Next = P2-WP5 secure write boundary: Google Sign-In (ID token) บน GitHub Pages → Apps Script Web App ตรวจ token + allowlist + role แล้วเขียน Sheet พร้อม audit; e2e intake ด้วยไฟล์จริงยังรอผู้ใช้วางไฟล์
+- Coding = STARTED (Phase 2 scope only; OD-03/OD-04/OD-08 ตัดสินแล้ว 2026-10-24)
+- Next = e2e P2-WP5 โดยผู้ใช้: ลงชื่อเข้าใช้ที่ console.html (whoami/intake.list) และ e2e intake ด้วยไฟล์จริงใน SourceAssets; จากนั้น drafts/validation/review ผ่านเว็บ
 - Baseline = v1.0-RC2 (ADR-0001; RC1 retained for compatibility)
 - Master Development Prompt = v1.1 (operational consolidation)
 - Validator (P1-WP2) = DONE; GT-01..06,10,14..17 + RC1 compat = PASS (expected outputs PENDING_HUMAN_CONFIRMATION); AC-01 = PASS ระดับ validator; AC-02 = rule-level PASS / pipeline NOT RUN; GT-07,08,09,11,12,13 = NOT RUN
@@ -99,3 +99,11 @@ Deployment P2-WP4 (2026-10-24): สร้าง Apps Script project “KEKB Work
 Verification (จริง): AuditLog seq 1 `sync:intake` OK `NO_CHANGE` (0 files), seq 2 `sync:canonical` OK `NO_CANONICAL`; ทริกเกอร์ `runSync` แบบตามเวลา 1 ตัว; IntakeQueue/RecordStatus ว่างตามคาด. NOT RUN: intake กับไฟล์จริง และ canonical mirror กับ canonical จริง (ยังไม่มี `knowledge/` ใน repo)
 
 Next packet: e2e intake ด้วยไฟล์จริง แล้ว P2-WP5 web write endpoints หลังตัดสิน identity + OD-08
+
+P2-WP5 (2026-10-24/25): secure write boundary — `backend/apps-script/Api.js` (KEKB_API.handle: size → shape → action allowlist → Google ID token claims via tokeninfo (aud/iss/exp/email_verified) → allowlist ACTORS_JSON จาก Script Properties → role → idempotency (actorId|key + payload hash, CacheService 6 ชม.) → expectedUpdatedAt (REVISION_CONFLICT) → execute → AuditLog); `doGet/doPost` ใน Code.js; actions = `whoami`, `intake.list`, `intake.update` (เฉพาะคอลัมน์ accessClassification/originalLanguage/assignedTo/note); `frontend/console.html` + `console.js` (Google Identity Services, token อยู่ในหน่วยความจำเท่านั้น, CSP เข้ม, render ด้วย textContent). OD-08 = ผ่อนปรน + flag (ผู้ใช้อนุมัติ)
+
+Deployment P2-WP5 (2026-10-25): GCP project `kekb-auth` (OAuth consent External/Testing, test user 1 คน), OAuth Web client จำกัด origin `https://krit-pj.github.io` (ไม่เก็บ client secret); อัปเดต Apps Script ผ่าน browser pane และยืนยัน sha256 หลังรีโหลดตรง repo ทั้ง 4 ไฟล์ (Code 4e6a36ae…, Lib 7a0b24fc…, Api 9ec458e8…, manifest 1ff735e3…); Script Properties เพิ่ม `OAUTH_CLIENT_ID`, `ACTORS_JSON` (1 actor `human:krit`); Deploy Web App version 1 (execute as owner, access anyone — ความปลอดภัยอยู่ที่การตรวจ ID token + allowlist ฝั่ง server); `frontend/config.json` ใส่ apiUrl + oauthClientId (ค่าสาธารณะ ไม่ใช่ secret); IDs อื่นอยู่ใน config local
+
+Verification P2-WP5: `npm test` ผ่านทั้งหมด (รวม api.test 8 + frontend static tests); security mutation 5/5 ถูกจับ; live smoke จาก browser → token ปลอม = `UNAUTHENTICATED`, action ไม่รู้จัก = `INVALID_INPUT(action)`, key แปลก (`role`) = `INVALID_INPUT(role)`, ไม่มีค่าใด ๆ ของ input สะท้อนกลับ. NOT RUN: ลงชื่อเข้าใช้จริง + whoami/intake.list/intake.update (ต้องให้ผู้ใช้ลงชื่อเอง), e2e intake ด้วยไฟล์จริง
+
+Next packet: ผู้ใช้ทดสอบลงชื่อเข้าใช้ console.html → แล้ว P2-WP6 drafts/validation/review ผ่านเว็บ (bundle validator สำหรับ Apps Script)

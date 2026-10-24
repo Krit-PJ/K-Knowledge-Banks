@@ -1,5 +1,5 @@
 {
-  "apiUrl": "",
-  "oauthClientId": "",
+  "apiUrl": "https://script.google.com/macros/s/AKfycbzmxy9vgt3ibqNlIrOGI3PKPjwncPJfYyDTUG3OdGGywvVNzvl_-V5h34HwyY-s9Clf/exec",
+  "oauthClientId": "24354598169-2ci1mm04ea82537m2bgjhf20ac0qmctj.apps.googleusercontent.com",
   "note": "Public values only (Apps Script Web App URL and OAuth client ID are not secrets). Never put tokens or keys here."
 }
