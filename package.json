@@ -9,7 +9,7 @@
   },
   "scripts": {
     "validate": "node validator/bin/kekb-validate.js",
-    "test": "node --test \"validator/test/*.test.js\" \"core/test/*.test.js\"",
+    "test": "node --test \"validator/test/*.test.js\" \"core/test/*.test.js\" \"backend/apps-script/test/*.test.js\"",
     "test:slice": "node --test core/test/slice.test.js",
     "kekb": "node core/bin/kekb.js",
     "test:golden": "node --test validator/test/golden.test.js"

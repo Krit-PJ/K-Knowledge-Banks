@@ -6,7 +6,7 @@ Documentation pack: **v1.0-RC2**
 ## Current status
 - Current Phase = **Phase 2 — Knowledge Intake, Evidence & Human Review** (STARTED 2026-10-24)
 - Coding = STARTED (Phase 2 scope only; OD-03/OD-04 ตัดสินแล้ว 2026-10-24; OD-08 ยังเปิด)
-- Next = P2-WP4 backend (Cloud Run + Google Sign-In) + Sheets/Drive sync — ต้องตัดสิน OD-08 และผู้ใช้ตั้ง GCP project/billing/service account ก่อน
+- Next = ติดตั้ง Apps Script ใน Sheet (ผู้ใช้ต้องอนุญาต OAuth) แล้วยืนยัน runSync จริง; จากนั้น P2-WP5 = web write endpoints (ต้องตัดสิน identity + OD-08)
 - Baseline = v1.0-RC2 (ADR-0001; RC1 retained for compatibility)
 - Master Development Prompt = v1.1 (operational consolidation)
 - Validator (P1-WP2) = DONE; GT-01..06,10,14..17 + RC1 compat = PASS (expected outputs PENDING_HUMAN_CONFIRMATION); AC-01 = PASS ระดับ validator; AC-02 = rule-level PASS / pipeline NOT RUN; GT-07,08,09,11,12,13 = NOT RUN
@@ -25,7 +25,7 @@ Documentation pack: **v1.0-RC2**
 | OD-01 | ตรวจ pack กับต้นฉบับ approved baseline/MASTER DEVELOPMENT PROMPT v1.1 ถ้ามี | ผู้ใช้ยืนยัน consolidated pack หรือระบุ corrections; ห้ามอ้างว่าได้อ่านต้นฉบับแล้ว |
 | OD-02 | field bindings, cardinalities, ID/enums/null/timestamps, serialization และ predicate/role registry | ยืนยันข้อเสนอ DATA-MODEL/VOCABULARY ก่อนสร้าง executable contracts |
 | OD-03 | API endpoints/payloads/pagination/idempotency limits | **CLOSED 2026-10-24**: ใช้ endpoint ตาม API-CONTRACT ที่เสนอ + cursor pagination, limit ≤ 100, idempotency key ใน mutation |
-| OD-04 | backend/auth provider, roles, public/private canonical, source permissions, backup/retention | **ส่วนหนึ่ง CLOSED 2026-10-24**: backend = Cloud Run (Node) + Google Sign-In (ID token) — GCP project/billing/service account ยังต้องตั้งโดยผู้ใช้; role assignment, source permissions, backup/retention ยังเปิด |
+| OD-04 | backend/auth provider, roles, public/private canonical, source permissions, backup/retention | **CHANGED 2026-10-24**: backend = **Google Apps Script** (ผู้ใช้เลือก A แทน B เพื่อไม่ต้องตั้ง GCP billing); identity สำหรับ web write endpoints, role assignment, source permissions, backup/retention ยังเปิด |
 | OD-05 | phase allocation และ MVP 2D optional/3D deferred | ผู้ใช้ยืนยัน scope และ phase prompts |
 | OD-06 | Binding assumptions B1–B5 ([validator/README](../../validator/README.md)), B6–B8 ([core/README](../../core/README.md)) และ golden expected outputs ใน `fixtures/golden/records/cases.json` | **CLOSED 2026-10-24**: ผู้ใช้ยืนยันทั้งหมด; เป็น binding authority และ regression authority; การเปลี่ยนใช้ ADR + migration plan + User approval |
 | OD-08 | Separation of duties: ผู้สร้าง revision อนุมัติ revision เดียวกันเองได้หรือไม่ | ยังเปิด: ข้อเสนอขึ้นกับจำนวนผู้ตรวจ — ผู้ใช้ต้องเลือก policy ก่อนบังคับใช้ใน review |
@@ -47,6 +47,7 @@ Documentation pack: **v1.0-RC2**
 | Commit P1-WP2, แก้ OD-07, P1-WP3 storage = local files | AUTHORIZED | ผู้ใช้ตอบ “อนุมัติ commit, แก้ OD-07, P1-WP3 ใช้ไฟล์ local” วันที่ 2026-10-24; commit local เท่านั้น ไม่ push; OD-06 ยังไม่ได้รับการยืนยัน |
 | OD-06 B1–B8 + golden expected outputs; commit P1-WP3; ปิด Phase 1 | APPROVED | ผู้ใช้ตอบ “ยืนยัน ข้อ 1 และ 2, อนุม้ติ Phase 1 แต่ยังไม่เริ่ม Phase 2” วันที่ 2026-10-24 |
 | GT-07 confirm; commit P2-WP1/P2-WP2; OD-03 อนุมัติ API surface ตามที่เสนอ; OD-04 = B (Cloud Run + Google Sign-In ID token) | APPROVED | ผู้ใช้ตอบ “ยืนยันและอนุมัติข้อ 1 - 4” วันที่ 2026-10-24 (ข้อ 4 ตีความเป็นข้อแนะนำใน decision packet; OD-08 ไม่มีข้อแนะนำเดียวจึงยังเปิด) |
+| OD-04 เปลี่ยนเป็น Apps Script + เริ่ม P2-WP4 | AUTHORIZED | ผู้ใช้ตอบ “เปลี่ยนเป็น A (Apps Script) และ ดำเนินการต่อที่ Phase 2: P2-WP4 backend และการ sync กับ Sheets/Drive” วันที่ 2026-10-24 |
 | GitHub repo + Pages frontend | AUTHORIZED | ผู้ใช้ตอบ “ใช้ https://github.com/ เป็น Frontend ให้ชื่อว่า K-Knowledge-Banks เข้า GitHub และไปจัดการให้ด้วย” + เลือก Public / ทั้ง repo / noreply / push ผ่าน connector วันที่ 2026-10-24 |
 | Phase 1 → Phase 2 | AUTHORIZED | ผู้ใช้ตอบ “เริ่ม Phase 2” วันที่ 2026-10-24; scope = PHASE-2.md; backend/auth/API/provider ยังต้องตัดสินแยก (OD-03/OD-04) ห้ามเลือกเอง |
 | Phase 2 → Phase 3 | PENDING | ยังไม่มี |
@@ -82,10 +83,14 @@ Verification P2-WP1: `npm test` ผ่านทั้งหมด (ดูรา�
 
 P2-WP2 (2026-10-24): ผู้ใช้สั่งใช้ Drive folder “4. K-Knowledge Bank” และสร้าง Google Sheet เป็น database ตามที่กำหนด → สร้าง Google Sheet “KEKB Workflow” (7 tabs: README, IntakeQueue, RecordStatus, ReviewQueue, CandidateQueue, AuditLog, Vocab; data validation อ้าง Vocab) ตามบทบาท baseline = operational workflow state เท่านั้น (ไม่ใช่ canonical/KG database); contract ของชีตอยู่ที่ `contracts/workflow-sheet/kekb-workflow-sheet-v1.json`; Drive/Sheet IDs เก็บใน `config/integrations.local.json` (gitignored, ไม่ commit เพราะเปิดถึง resource ส่วนตัว)
 
-Verification P2-WP2: อ่านไฟล์หลัง upload ผ่าน Drive → 7 tabs, headers ครบตาม contract, Vocab ตรง vocabulary RC2; data validation ใน Google Sheets = NOT VERIFIED (Drive read ไม่แสดง); known issue: README บางบรรทัดในพจนานุกรมคอลัมน์ (timestamp columns) อธิบายผิดว่า "ค่าจาก Vocab" — แก้ได้เมื่อเปิด Google Sheets connector; ยังไม่มี sync อัตโนมัติ (รอ OD-04)
+Verification P2-WP2: อ่านไฟล์หลัง upload ผ่าน Drive → 7 tabs, headers ครบตาม contract, Vocab ตรง vocabulary RC2. Fix 2026-10-24 (Google Sheets connector): พบว่า data validation หายตอนแปลง .xlsx → ใส่ใหม่ 9 คอลัมน์ (ONE_OF_RANGE อ้าง Vocab, strict) และแก้พจนานุกรมคอลัมน์ README ที่อธิบาย timestamp ผิด — อ่านกลับยืนยันแล้ว
 
 P2-WP3 (2026-10-24): สร้าง GitHub repo `Krit-PJ/K-Knowledge-Banks` (Public) ผ่านเบราว์เซอร์, ตั้ง Pages source = GitHub Actions, push `main` ผ่าน Claude GitHub App (ผู้ใช้ติดตั้งแบบ select repository เดียว); commit author/committer ถูก rewrite เป็น GitHub noreply ก่อน push
 
 Verification P2-WP3: pre-push scan ทั้ง working tree + history ไม่พบ secret/token/Drive ID/อีเมล; clean clone `npm ci && npm test` 68/68; GitHub Actions run `test-and-deploy-pages` → test: success, deploy: success; https://krit-pj.github.io/K-Knowledge-Banks/ โหลดได้และแสดง frontend shell ภาษาไทย (ไม่มีข้อมูลความรู้). ข้อจำกัด: PROJECT-STATE มี local path ของเครื่องผู้ใช้ (ความเสี่ยงต่ำ, ผู้ใช้รับทราบ)
 
-Next packet: P2-WP4 backend (Cloud Run + Google Sign-In) + Sheets/Drive sync หลังปิด OD-08 และตั้ง GCP
+P2-WP4 (2026-10-24): `backend/apps-script/` (Lib.js pure logic + Code.js adapters + appsscript.json scopes แคบ) — Drive `SourceAssets` → IntakeQueue (RECEIVED, RESTRICTED โดยปริยาย, key driveFileId+sha256, ไม่เก็บชื่อไฟล์) และ GitHub canonical (`knowledge/`) → RecordStatus (COMMITTED/PUBLISHED/SUPERSEDED + dependencyStale, canonical wins); ไม่ลบแถว, คงคอลัมน์มนุษย์, กัน formula injection, LockService; ไม่มี web write endpoint. สร้าง Drive folder `SourceAssets` (ID ใน config local). Sheet fix: data validation 9 คอลัมน์ + README dictionary
+
+Verification P2-WP4: `npm test` 79/79 (เพิ่ม Apps Script 11); mutation 5/5 ถูกจับ (หลังเพิ่ม test กรณี same-key rerun ที่พบจาก mutant A1 รอด); การรันจริงใน Apps Script = NOT RUN (ต้องติดตั้งและอนุญาต OAuth โดยผู้ใช้); canonical root `knowledge/` ยังไม่มีใน repo → คาดว่าได้ `NO_CANONICAL`
+
+Next packet: ติดตั้ง/ยืนยัน Apps Script จริง แล้ว P2-WP5 web write endpoints หลังตัดสิน identity + OD-08

@@ -2,8 +2,20 @@
   "sheetSchemaVersion": "kekb-workflow-sheet-v1",
   "baseline": "v1.0-RC2",
   "role": "Operational workflow state only (queue, assignment, status mirror). NOT canonical, NOT a knowledge graph database. Reconciled to canonical by id + revision; canonical wins on conflict.",
-  "humanEditableColumns": ["assignedTo", "assignedReviewer", "note"],
-  "systemOnlyColumns": ["workflowState", "decision", "revision", "contentHash", "canonicalRevision", "dependencyStale", "syncedAt"],
+  "humanEditableColumns": [
+    "assignedTo",
+    "assignedReviewer",
+    "note"
+  ],
+  "systemOnlyColumns": [
+    "workflowState",
+    "decision",
+    "revision",
+    "contentHash",
+    "canonicalRevision",
+    "dependencyStale",
+    "syncedAt"
+  ],
   "rules": [
     "Sheet cell content is untrusted input: never authority, approval or reviewer identity",
     "Opaque actor IDs only; no email, phone, PII, secrets or tokens",
@@ -11,16 +23,116 @@
     "Rows are never deleted; state history is kept"
   ],
   "tabs": {
-    "IntakeQueue": ["intakeId", "sourceAssetId", "sourceRevision", "sourceKind", "sourceVersion", "sha256", "accessClassification", "originalLanguage", "driveFileId", "workflowState", "assignedTo", "receivedAt", "updatedAt", "syncedAt", "note"],
-    "RecordStatus": ["recordId", "recordType", "revision", "workflowState", "canonicalRevision", "dependencyStale", "contentHash", "updatedAt", "updatedBy", "syncedAt"],
-    "ReviewQueue": ["requestId", "targets", "protocolRef", "status", "decision", "snapshotId", "reviewerId", "createdAt", "closedAt", "syncedAt"],
-    "CandidateQueue": ["candidateId", "candidateType", "candidateState", "recordRefs", "scopeSummary", "assignedReviewer", "createdAt", "updatedAt", "syncedAt"],
-    "AuditLog": ["seq", "at", "actor", "action", "target", "outcome", "code"]
+    "IntakeQueue": [
+      "intakeId",
+      "sourceAssetId",
+      "sourceRevision",
+      "sourceKind",
+      "sourceVersion",
+      "sha256",
+      "accessClassification",
+      "originalLanguage",
+      "driveFileId",
+      "workflowState",
+      "assignedTo",
+      "receivedAt",
+      "updatedAt",
+      "syncedAt",
+      "note"
+    ],
+    "RecordStatus": [
+      "recordId",
+      "recordType",
+      "revision",
+      "workflowState",
+      "canonicalRevision",
+      "dependencyStale",
+      "contentHash",
+      "updatedAt",
+      "updatedBy",
+      "syncedAt"
+    ],
+    "ReviewQueue": [
+      "requestId",
+      "targets",
+      "protocolRef",
+      "status",
+      "decision",
+      "snapshotId",
+      "reviewerId",
+      "createdAt",
+      "closedAt",
+      "syncedAt"
+    ],
+    "CandidateQueue": [
+      "candidateId",
+      "candidateType",
+      "candidateState",
+      "recordRefs",
+      "scopeSummary",
+      "assignedReviewer",
+      "createdAt",
+      "updatedAt",
+      "syncedAt"
+    ],
+    "AuditLog": [
+      "seq",
+      "at",
+      "actor",
+      "action",
+      "target",
+      "outcome",
+      "code"
+    ]
   },
   "validationLists": {
-    "accessClassification": "AccessClassification", "workflowState": "WorkflowState", "recordType": "RecordType",
-    "dependencyStale": "Boolean", "status": "ReviewStatus", "decision": "ReviewDecision",
-    "candidateType": "CandidateType", "candidateState": "CandidateState"
+    "accessClassification": "AccessClassification",
+    "workflowState": "WorkflowState",
+    "recordType": "RecordType",
+    "dependencyStale": "Boolean",
+    "status": "ReviewStatus",
+    "decision": "ReviewDecision",
+    "candidateType": "CandidateType",
+    "candidateState": "CandidateState"
   },
-  "vocabSource": "contracts/vocabulary/v1.0-RC2.json (+ ReviewStatus OPEN/CLOSED, CandidateType, Boolean)"
+  "vocabSource": "contracts/vocabulary/v1.0-RC2.json (+ ReviewStatus OPEN/CLOSED, CandidateType, Boolean)",
+  "sync": {
+    "backend": "Google Apps Script bound to the workflow sheet (backend/apps-script/)",
+    "IntakeQueue": {
+      "source": "Drive folder SourceAssets (non-recursive)",
+      "key": [
+        "driveFileId",
+        "sha256"
+      ],
+      "initialState": "RECEIVED",
+      "initialAccessClassification": "RESTRICTED",
+      "preservedWhenNonEmpty": [
+        "assignedTo",
+        "note",
+        "accessClassification",
+        "originalLanguage",
+        "sourceAssetId",
+        "sourceRevision",
+        "workflowState"
+      ]
+    },
+    "RecordStatus": {
+      "source": "GitHub raw <CANONICAL_ROOT>/canonical/manifest.json + records + read-models/ACTIVE.json + stale.json",
+      "key": [
+        "recordId",
+        "revision"
+      ],
+      "states": [
+        "COMMITTED",
+        "PUBLISHED",
+        "SUPERSEDED"
+      ],
+      "canonicalWins": true
+    },
+    "AuditLog": {
+      "actor": "service:apps-script-sync",
+      "appendOnly": true
+    },
+    "cellSafety": "values starting with = + - @ tab CR are written as literal text"
+  }
 }
