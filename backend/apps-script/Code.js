@@ -1,7 +1,8 @@
 /**
  * KEKB Apps Script backend — adapters (bound to the "KEKB Workflow" spreadsheet).
- * Runs as the owner via a time-driven trigger. No web endpoint in this packet (P2-WP4):
- * write endpoints wait for the identity decision.
+ * Time-driven sync (P2-WP4) + web API (P2-WP5/WP6, see the end of this file). Rules live in Lib.js (pure),
+ * Api.js (pure request pipeline) and Engine.js (generated workflow engine + validator); this file only touches
+ * Google services.
  *
  * Script Properties (Project Settings → Script properties), no secrets:
  *   SOURCE_FOLDER_ID  Drive folder holding raw SourceAssets (files are hashed, never executed)
@@ -9,6 +10,8 @@
  *   GITHUB_BRANCH     e.g. main
  *   CANONICAL_ROOT    e.g. knowledge   (canonical/ and read-models/ live under it)
  *   MAX_FILE_BYTES    optional, default 50000000
+ *   DRAFTS_FOLDER_ID  set by setupDrafts(): private folder created by this script (drive.file scope)
+ *   OAUTH_CLIENT_ID, ACTORS_JSON  web API identity (see below)
  */
 
 function setup() {
@@ -155,10 +158,15 @@ function doGet() {
 function doPost(e) {
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(20000)) return json_({ ok: false, error: { code: 'RATE_LIMITED' }, contractVersion: KEKB_API.CONTRACT_VERSION });
+  var deps = null;
   try {
-    return json_(KEKB_API.handle(e && e.postData ? e.postData.contents : '', apiDeps_()));
+    deps = apiDeps_();
+    return json_(KEKB_API.handle(e && e.postData ? e.postData.contents : '', deps));
+  } catch (err) {
+    return json_({ ok: false, error: { code: 'DEPENDENCY_UNAVAILABLE' }, contractVersion: KEKB_API.CONTRACT_VERSION });
   } finally {
-    lock.releaseLock();
+    // mirror + audit are flushed even when the action failed: Drive writes that happened must be visible
+    try { if (deps) deps.flush(); } finally { lock.releaseLock(); }
   }
 }
 
@@ -172,6 +180,12 @@ function apiDeps_() {
   Object.keys(raw).forEach(function (k) { actors[String(k).toLowerCase()] = raw[k]; });
   var cache = CacheService.getScriptCache();
   var idemKey = function (k) { return 'idem:' + sha256Hex_(Utilities.newBlob(k).getBytes()); };
+  var pending = { status: {}, reviews: {}, sources: {}, audit: [] };
+  var store = driveStore_(p.getProperty('DRAFTS_FOLDER_ID'), pending);
+  var hashText = function (text) { return sha256Hex_(Utilities.newBlob(text, 'application/json').getBytes()); };
+  var engine = KEKB_ENGINE.createEngine({
+    store: store, now: function () { return new Date().toISOString(); }, newId: newId_, sha256: hashText,
+  });
   return {
     nowMs: function () { return Date.now(); },
     clientId: p.getProperty('OAUTH_CLIENT_ID'),
@@ -202,6 +216,139 @@ function apiDeps_() {
     },
     // retention 6 h (CacheService max); policy for longer retention is still open
     idem: { get: function (k) { return cache.get(idemKey(k)); }, put: function (k, v) { cache.put(idemKey(k), v, 21600); } },
-    audit: function (entry) { appendAudit_([entry], new Date().toISOString()); },
+    audit: function (entry) { pending.audit.push(entry); },
+    engine: engine,
+    store: store,
+    source: { verify: verifySource_ },
+    flush: function () { flushMirror_(pending, engine); },
   };
+}
+
+// ---------------------------------------------------------------------------------------------
+// P2-WP6 drafts / validation / review. Drafts are JSON files (one per id@revision) in a private Drive
+// folder created by this script (scope drive.file: the script can only write files it created).
+// Sheets get status copies only (RecordStatus, ReviewQueue, IntakeQueue.workflowState) + AuditLog.
+// ---------------------------------------------------------------------------------------------
+
+/** Run once from the editor after authorizing the drive.file scope. Idempotent. */
+function setupDrafts() {
+  var p = PropertiesService.getScriptProperties();
+  var id = p.getProperty('DRAFTS_FOLDER_ID');
+  var folder = null;
+  if (id) { try { folder = DriveApp.getFolderById(id); } catch (err) { folder = null; } }
+  if (!folder) {
+    folder = DriveApp.createFolder('KEKB Drafts (private)');
+    folder.setDescription('KEKB draft records and review requests. Written only by the KEKB Apps Script. Not canonical.');
+    p.setProperty('DRAFTS_FOLDER_ID', folder.getId());
+  }
+  subFolder_(folder, 'records'); subFolder_(folder, 'reviews');
+  var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('ReviewQueue');
+  var header = sh.getRange(1, 1, 1, KEKB.TABS.ReviewQueue.columns.length).getValues()[0].map(String);
+  if (header.join('|') !== KEKB.TABS.ReviewQueue.columns.join('|')) throw new Error('SHEET_SCHEMA_MISMATCH in ReviewQueue');
+  sh.getRange(2, 1, sh.getMaxRows() - 1, header.length).setNumberFormat('@');
+  return 'OK: drafts folder ready';
+}
+
+function subFolder_(parent, name) {
+  var it = parent.getFoldersByName(name);
+  return it.hasNext() ? it.next() : parent.createFolder(name);
+}
+
+var DRAFT_NAME_ = /^([0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})@([1-9][0-9]{0,5})\.json$/;
+var REVIEW_NAME_ = /^([0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})\.json$/;
+
+/** Engine store over Drive JSON files; request-scoped cache; queues Sheet mirror rows in `pending`. */
+function driveStore_(folderId, pending) {
+  // resolved lazily so whoami/intake actions keep working before setupDrafts() has run
+  var dirs = null;
+  function D() {
+    if (!dirs) {
+      if (!folderId) throw new Error('CONFIG_MISSING');
+      var root = DriveApp.getFolderById(folderId);
+      dirs = { rec: subFolder_(root, 'records'), rev: subFolder_(root, 'reviews') };
+    }
+    return dirs;
+  }
+  var recIndex = null; var revIndex = null; var texts = {}; var canonical = null;
+  function index(dir, re) {
+    var out = {}; var it = dir.getFiles();
+    while (it.hasNext()) { var f = it.next(); if (re.test(f.getName())) out[f.getName()] = f; }
+    return out;
+  }
+  function recs() { if (!recIndex) recIndex = index(D().rec, DRAFT_NAME_); return recIndex; }
+  function revs() { if (!revIndex) revIndex = index(D().rev, REVIEW_NAME_); return revIndex; }
+  function read(idx, name) {
+    if (!idx[name]) return undefined;
+    if (texts[name] === undefined) texts[name] = idx[name].getBlob().getDataAsString('UTF-8');
+    return JSON.parse(texts[name]);
+  }
+  function write(dir, idx, name, obj) {
+    var text = JSON.stringify(obj, null, 2) + '\n';
+    if (idx[name]) idx[name].setContent(text); else idx[name] = dir.createFile(name, text, 'application/json');
+    texts[name] = text;
+  }
+  function revisionsOf(id) {
+    return Object.keys(recs()).filter(function (n) { return n.indexOf(id + '@') === 0; })
+      .map(function (n) { return Number(DRAFT_NAME_.exec(n)[2]); }).sort(function (a, b) { return a - b; });
+  }
+  return {
+    putDraft: function (r) {
+      write(D().rec, recs(), r.id + '@' + r.revision + '.json', r);
+      pending.status[r.id + '@' + r.revision] = r;
+      if (r.type === 'SourceAsset') pending.sources[r.id] = r.workflowState;
+    },
+    getDraft: function (id, rev) {
+      var all = revisionsOf(id); var n = rev === undefined ? all[all.length - 1] : rev;
+      return n === undefined ? undefined : read(recs(), id + '@' + n + '.json');
+    },
+    draftRevisions: revisionsOf,
+    latestDrafts: function () {
+      var latest = {};
+      Object.keys(recs()).forEach(function (n) { var m = DRAFT_NAME_.exec(n); var r = Number(m[2]); if (!latest[m[1]] || latest[m[1]] < r) latest[m[1]] = r; });
+      return Object.keys(latest).sort().map(function (id) { return read(recs(), id + '@' + latest[id] + '.json'); });
+    },
+    canonicalRecords: function () {
+      if (canonical) return canonical;
+      var cfg = config_();
+      var manifest = fetchJson_(cfg, cfg.root + '/canonical/manifest.json');
+      canonical = manifest ? manifest.records.map(function (k) { return fetchJson_(cfg, cfg.root + '/canonical/records/' + k + '.json'); }) : [];
+      return canonical;
+    },
+    getReview: function (requestId) { return read(revs(), requestId + '.json'); },
+    putReview: function (req) { write(D().rev, revs(), req.requestId + '.json', req); pending.reviews[req.requestId] = req; },
+    listReviews: function () {
+      return Object.keys(revs()).sort().map(function (n) { return read(revs(), n); });
+    },
+    audit: function (entry) { pending.audit.push(entry); },
+  };
+}
+
+/** Re-hash the raw Drive bytes (Sheet cells are untrusted). */
+function verifySource_(driveFileId) {
+  var cfg = config_();
+  var f = DriveApp.getFileById(driveFileId);
+  // the file must still sit in the SourceAssets folder
+  var parents = f.getParents(); var inFolder = false;
+  while (parents.hasNext()) if (parents.next().getId() === cfg.sourceFolderId) inFolder = true;
+  if (!inFolder || f.getSize() > cfg.maxBytes) return null;
+  return { sha256: sha256Hex_(f.getBlob().getBytes()), mimeType: f.getMimeType(), modifiedAt: f.getLastUpdated().toISOString() };
+}
+
+function flushMirror_(pending, engine) {
+  var now = new Date().toISOString();
+  var statusRows = Object.keys(pending.status).sort().map(function (k) { var r = pending.status[k]; return KEKB.draftStatusRow(r, engine.contentHash(r)); });
+  if (statusRows.length) { var t = table_('RecordStatus'); applyPlan_(t, KEKB.planUpsert('RecordStatus', t.header, t.rows, statusRows, now)); }
+  var reviewRows = Object.keys(pending.reviews).sort().map(function (k) { return KEKB.reviewRow(pending.reviews[k]); });
+  if (reviewRows.length) { var q = table_('ReviewQueue'); applyPlan_(q, KEKB.planUpsert('ReviewQueue', q.header, q.rows, reviewRows, now)); }
+  var ids = Object.keys(pending.sources);
+  if (ids.length) {
+    var iq = table_('IntakeQueue'); var col = iq.header.indexOf('workflowState');
+    KEKB.rowsToObjects(iq.header, iq.rows).forEach(function (o, i) {
+      if (o.sourceAssetId && pending.sources[o.sourceAssetId] && o.workflowState !== pending.sources[o.sourceAssetId]) {
+        iq.sheet.getRange(i + 2, col + 1).setValue(KEKB.sanitizeCell(pending.sources[o.sourceAssetId]));
+      }
+    });
+  }
+  if (pending.audit.length) appendAudit_(pending.audit, now);
+  pending.status = {}; pending.reviews = {}; pending.sources = {}; pending.audit = [];
 }

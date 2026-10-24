@@ -26,6 +26,18 @@ select,input,textarea{font:inherit;color:inherit;background:transparent;border:1
 textarea{min-height:52px}
 button{font:inherit;padding:6px 12px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer}
 button[disabled]{opacity:.5;cursor:default}
+button.secondary{background:transparent;color:var(--accent)}
+h2{margin:0 0 8px;font-size:18px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.inline{display:flex;gap:6px;align-items:center;white-space:nowrap}
+.inline select{width:auto;min-width:220px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-bottom:8px}
+label{display:block;font-size:14px;color:var(--muted)}
+textarea.code{font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;min-height:auto}
+.card{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:10px}
+.tag{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:0 8px;font-size:12px;margin-left:6px}
+.tag.warn{border-color:var(--bad);color:var(--bad)}
+ul.issues{margin:8px 0 0;padding-left:20px;font-size:13px}
 code{font-size:12px}
 a{color:var(--accent)}
 </style>
@@ -40,12 +52,42 @@ a{color:var(--accent)}
 <div id="status" role="status" aria-live="polite"></div>
 </section>
 <section id="intake" hidden>
-<h2 style="margin:0 0 8px;font-size:18px">ไฟล์ที่รับเข้า (IntakeQueue)</h2>
-<p class="muted">กำหนดระดับการเปิดเผย ภาษา ผู้รับผิดชอบ และหมายเหตุ — สถานะ workflow เปลี่ยนโดยระบบเท่านั้น</p>
+<h2>1 · ไฟล์ที่รับเข้า (IntakeQueue)</h2>
+<p class="muted">กำหนดระดับการเปิดเผยและภาษา แล้วกด “ลงทะเบียน” เพื่อสร้าง SourceAsset (ระบบคำนวณ sha256 จากไฟล์จริงใน Drive อีกครั้ง) — หลังลงทะเบียนแล้วแก้ระดับการเปิดเผย/ภาษาไม่ได้</p>
 <div class="table"><table>
-<thead><tr><th>ไฟล์</th><th>สถานะ</th><th>ระดับการเปิดเผย</th><th>ภาษา</th><th>ผู้รับผิดชอบ</th><th>หมายเหตุ</th><th></th></tr></thead>
+<thead><tr><th>ไฟล์</th><th>สถานะ</th><th>ระดับการเปิดเผย</th><th>ภาษา</th><th>ผู้รับผิดชอบ</th><th>หมายเหตุ</th><th></th><th>ขั้นถัดไป</th></tr></thead>
 <tbody id="rows"></tbody>
 </table></div>
+</section>
+<section id="drafts" hidden>
+<h2>2 · ร่างข้อมูล (Drafts)</h2>
+<p class="muted">ร่างเก็บเป็นไฟล์ JSON ในโฟลเดอร์ Drive ส่วนตัว (ไม่ใช่ข้อมูลหลัก) ทุกครั้งที่แก้เนื้อหาจะได้ revision ใหม่ ติ๊กเลือกเพื่อส่งตรวจ</p>
+<div class="table"><table>
+<thead><tr><th><input type="checkbox" id="pickAll" aria-label="เลือกทั้งหมด"></th><th>ประเภท</th><th>ID</th><th>rev</th><th>สถานะ</th><th>แก้ไขล่าสุด</th><th></th></tr></thead>
+<tbody id="draftRows"></tbody>
+</table></div>
+<div class="bar">
+<button type="button" id="btnValidate">ตรวจความถูกต้องทั้งหมด</button>
+<label class="inline">ReviewProtocol <select id="protocol"></select></label>
+<button type="button" id="btnRequest">ส่งรายการที่เลือกเข้าคิวตรวจ</button>
+</div>
+<div id="issues"></div>
+</section>
+<section id="editor" hidden>
+<h2>3 · ตัวแก้ไขร่าง (JSON)</h2>
+<p class="muted">ห้ามใส่ช่องที่ระบบกำหนดเอง (id, revision, workflowState, createdBy, provenance ฯลฯ) — ระบบจะปฏิเสธ แทนค่า <code>REPLACE_WITH_…</code> ด้วย ID จริงจากตารางด้านบน</p>
+<div class="grid">
+<label>เริ่มจาก template <select id="tplType"></select></label>
+<label>กำลังแก้ <input id="edTarget" readonly placeholder="ร่างใหม่"></label>
+</div>
+<label>เนื้อหา record<textarea id="edRecord" class="code" rows="16" spellcheck="false"></textarea></label>
+<label>sourceRefs (อ้าง SourceAsset ที่ใช้)<textarea id="edRefs" class="code" rows="3" spellcheck="false">[]</textarea></label>
+<div class="bar"><button type="button" id="btnSave">บันทึกร่าง</button><button type="button" id="btnNew" class="secondary">ล้าง / ร่างใหม่</button></div>
+</section>
+<section id="reviews" hidden>
+<h2>4 · คิวตรวจ (ReviewQueue)</h2>
+<p class="muted">ผู้ตรวจ (REVIEWER) ตัดสินจาก revision ที่ถูกตรึงไว้ ถ้ามีการแก้ร่างหลังส่งตรวจ ระบบจะไม่ยอมให้ตัดสิน — การตรวจงานที่ตัวเองสร้างทำได้แต่ถูกบันทึกว่า “ตรวจงานตัวเอง”</p>
+<div id="reviewList"></div>
 </section>
 <p class="muted"><a href="./">← กลับหน้าแรก</a></p>
 </main>

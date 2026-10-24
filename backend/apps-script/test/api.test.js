@@ -82,7 +82,7 @@ test('validation: bad enum / language / unknown assignee / unknown field / workf
     assert.ok(!JSON.stringify(r).includes('TOP_SECRET') && !JSON.stringify(r).includes('<script>'), 'values never echoed');
   }
   let s = setup(); assert.equal(call(s, '{not json').error.code, 'INVALID_INPUT');
-  s = setup(); assert.equal(call(s, 'x'.repeat(40000)).error.code, 'INVALID_INPUT');
+  s = setup(); assert.equal(call(s, 'x'.repeat(140000)).error.code, 'INVALID_INPUT');
   s = setup(); assert.equal(call(s, { action: 'admin.deleteAll', idToken: 'tok-owner-xxxxxxxxxxxxxxxx' }).error.code, 'INVALID_INPUT');
 });
 

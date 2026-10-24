@@ -31,14 +31,19 @@ export function loadContracts() {
     const schema = readJson(files.schema);
     if (!ajv.validateSchema(schema)) throw new Error(`Contract schema ${version} fails JSON Schema 2020-12 metaschema`);
     ajv.addSchema(schema);
-    const vocabulary = readJson(files.vocabulary);
-    const recordTypes = new Set(schema.$defs.RecordType.enum);
-    const validators = {};
-    for (const t of recordTypes) validators[t] = ajv.getSchema(`${schema.$id}#/$defs/${t}`);
-    const topics = new Map((vocabulary.topics || []).map((t) => [t.id, t]));
-    const roles = new Map(vocabulary.participantRoles.map((r) => [r.id, r]));
-    versions[version] = { schema, vocabulary, recordTypes, validators, topics, roles };
+    versions[version] = assembleVersion(schema, readJson(files.vocabulary), (t) => ajv.getSchema(`${schema.$id}#/$defs/${t}`));
   }
   cache = { ajv, versions, lint };
   return cache;
 }
+
+/** Shared by the Node loader and the pre-compiled Apps Script bundle (same structure, same validators). */
+export function assembleVersion(schema, vocabulary, getValidator) {
+  const recordTypes = new Set(schema.$defs.RecordType.enum);
+  const validators = {};
+  for (const t of recordTypes) validators[t] = getValidator(t);
+  const topics = new Map((vocabulary.topics || []).map((t) => [t.id, t]));
+  const roles = new Map(vocabulary.participantRoles.map((r) => [r.id, r]));
+  return { schema, vocabulary, recordTypes, validators, topics, roles };
+}
+export const VERSION_FILE_MAP = VERSION_FILES;

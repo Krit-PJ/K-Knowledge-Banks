@@ -23,7 +23,7 @@ const apply = (rows, plan) => {
 };
 
 test('tab columns match the workflow-sheet contract', () => {
-  for (const tab of ['IntakeQueue', 'RecordStatus', 'AuditLog']) assert.deepEqual(H(tab), contract.tabs[tab]);
+  for (const tab of ['IntakeQueue', 'RecordStatus', 'ReviewQueue', 'AuditLog']) assert.deepEqual(H(tab), contract.tabs[tab]);
 });
 
 test('uuidv7 / bytesToHex: valid v7 format, signed bytes handled', () => {
@@ -115,6 +115,7 @@ test('Code.js uses no secrets and only the declared services', () => {
   const manifest = JSON.parse(fs.readFileSync(new URL('../appsscript.json', import.meta.url), 'utf8'));
   assert.ok(manifest.oauthScopes.includes('https://www.googleapis.com/auth/spreadsheets.currentonly'));
   assert.ok(!manifest.oauthScopes.some((s) => /auth\/drive$/.test(s)), 'no full Drive write scope');
+  assert.ok(manifest.oauthScopes.includes('https://www.googleapis.com/auth/drive.file'), 'drafts: write only files this script created');
 });
 
 test('Drive intake: same file rerun keeps human/curator edits on that row (no overwrite, no write)', () => {
@@ -127,4 +128,19 @@ test('Drive intake: same file rerun keeps human/curator edits on that row (no ov
   rows[0][h.indexOf('note')] = 'ตรวจลิขสิทธิ์แล้ว';
   const p = K.planUpsert('IntakeQueue', h, rows, K.intakeDesired(files, K.rowsToObjects(h, rows), NOW, newId), NOW);
   assert.deepEqual({ u: p.updates.length, a: p.appends.length }, { u: 0, a: 0 });
+});
+
+test('P2-WP6 mirrors: draft → RecordStatus row, review → ReviewQueue row (refs only, no reason text), idempotent upsert', () => {
+  const rec = { id: '019a1b2c-3d4e-7f00-8abc-0123456789ab', type: 'Claim', revision: 2, workflowState: 'VALIDATED', updatedAt: NOW, updatedBy: 'human:krit', reason: 'x' };
+  const row = K.draftStatusRow(rec, 'h'.repeat(64));
+  assert.deepEqual(Object.keys(row).sort(), H('RecordStatus').filter((c) => c !== 'syncedAt').sort());
+  assert.equal(row.dependencyStale, 'FALSE'); assert.equal(row.canonicalRevision, '');
+  const req = { requestId: 'r1', status: 'CLOSED', targets: [{ id: 'a', revision: 1, type: 'Claim', contentHash: 'z' }, { id: 'b', revision: 3 }],
+    protocolRef: { id: 'p', type: 'ReviewProtocol', revision: 1 }, decision: 'APPROVE', snapshotId: 's', reviewerId: 'human:krit', createdAt: NOW, closedAt: NOW, reason: { th: 'ลับ' } };
+  const rr = K.reviewRow(req);
+  assert.equal(rr.targets, 'a@1,b@3'); assert.equal(rr.protocolRef, 'p@1'); assert.ok(!JSON.stringify(rr).includes('ลับ'));
+  const plan = K.planUpsert('ReviewQueue', H('ReviewQueue'), [], [rr], NOW);
+  assert.equal(plan.appends.length, 1);
+  const again = K.planUpsert('ReviewQueue', H('ReviewQueue'), plan.appends.map((r) => r.map(String)), [rr], NOW);
+  assert.equal(again.updates.length + again.appends.length, 0);
 });

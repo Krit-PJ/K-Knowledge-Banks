@@ -114,7 +114,8 @@
         "sourceAssetId",
         "sourceRevision",
         "workflowState"
-      ]
+      ],
+      "webApi": "source.register sets sourceAssetId/sourceRevision/workflowState=REGISTERED after re-hashing the Drive bytes; later SourceAsset state changes update workflowState"
     },
     "RecordStatus": {
       "source": "GitHub raw <CANONICAL_ROOT>/canonical/manifest.json + records + read-models/ACTIVE.json + stale.json",
@@ -127,12 +128,20 @@
         "PUBLISHED",
         "SUPERSEDED"
       ],
-      "canonicalWins": true
+      "canonicalWins": true,
+      "draftRows": "P2-WP6: the web API also mirrors draft records (Drive JSON, not canonical) with their workflow state; canonical sync overwrites the same recordId+revision key (canonical wins)"
     },
     "AuditLog": {
       "actor": "service:apps-script-sync",
       "appendOnly": true
     },
-    "cellSafety": "values starting with = + - @ tab CR are written as literal text"
+    "cellSafety": "values starting with = + - @ tab CR are written as literal text",
+    "ReviewQueue": {
+      "source": "Drive KEKB Drafts/reviews/<requestId>.json (web API)",
+      "key": [
+        "requestId"
+      ],
+      "content": "ids, refs as id@revision, status, decision, reviewer actorId and timestamps only; reason text and record content stay in Drive"
+    }
   }
 }

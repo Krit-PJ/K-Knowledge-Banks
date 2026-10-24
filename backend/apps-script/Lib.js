@@ -2,7 +2,7 @@
  * KEKB Apps Script backend — pure logic (no Google services). Loaded by Apps Script as a
  * global script file and by Node tests through `vm`. Keep it free of SpreadsheetApp/DriveApp.
  *
- * Role (baseline): Google Sheets = operational workflow state only. Canonical knowledge lives in
+ * Role (baseline): Google Sheets = operational workflow state only (drafts live as JSON files in a private Drive folder). Canonical knowledge lives in
  * the GitHub repository; this code only mirrors it. Rows are never deleted; human-editable
  * columns are preserved; canonical wins on system columns.
  */
@@ -22,6 +22,11 @@ var KEKB = (function () {
       columns: ['recordId', 'recordType', 'revision', 'workflowState', 'canonicalRevision', 'dependencyStale', 'contentHash',
         'updatedAt', 'updatedBy', 'syncedAt'],
       key: ['recordId', 'revision'],
+      human: [],
+    },
+    ReviewQueue: {
+      columns: ['requestId', 'targets', 'protocolRef', 'status', 'decision', 'snapshotId', 'reviewerId', 'createdAt', 'closedAt', 'syncedAt'],
+      key: ['requestId'],
       human: [],
     },
     AuditLog: { columns: ['seq', 'at', 'actor', 'action', 'target', 'outcome', 'code'], key: ['seq'], human: [] },
@@ -157,6 +162,24 @@ var KEKB = (function () {
     });
   }
 
+  /** Draft record → RecordStatus mirror row (status copy only; drafts live in Drive, canonical in GitHub). */
+  function draftStatusRow(record, contentHash) {
+    return {
+      recordId: record.id, recordType: record.type, revision: record.revision, workflowState: record.workflowState,
+      canonicalRevision: '', dependencyStale: 'FALSE', contentHash: contentHash, updatedAt: record.updatedAt, updatedBy: record.updatedBy,
+    };
+  }
+  /** Review request → ReviewQueue mirror row. Refs are id@revision text; no reason text or record content. */
+  function reviewRow(req) {
+    return {
+      requestId: req.requestId,
+      targets: (req.targets || []).map(function (t) { return t.id + '@' + t.revision; }).join(','),
+      protocolRef: req.protocolRef ? req.protocolRef.id + '@' + req.protocolRef.revision : '',
+      status: req.status, decision: req.decision || '', snapshotId: req.snapshotId || '', reviewerId: req.reviewerId || '',
+      createdAt: req.createdAt || '', closedAt: req.closedAt || '',
+    };
+  }
+
   function auditRows(lastSeq, entries, nowIso) {
     return entries.map(function (e, i) {
       return [lastSeq + i + 1, nowIso, e.actor || SYNC_ACTOR, e.action, e.target, e.outcome, e.code || ''].map(sanitizeCell);
@@ -167,6 +190,6 @@ var KEKB = (function () {
     SHEET_SCHEMA_VERSION: SHEET_SCHEMA_VERSION, SYNC_ACTOR: SYNC_ACTOR, TABS: TABS,
     bytesToHex: bytesToHex, uuidv7: uuidv7, canonicalJson: canonicalJson, sanitizeCell: sanitizeCell,
     rowsToObjects: rowsToObjects, planUpsert: planUpsert, intakeDesired: intakeDesired,
-    statusDesired: statusDesired, auditRows: auditRows, pad: pad,
+    statusDesired: statusDesired, auditRows: auditRows, pad: pad, draftStatusRow: draftStatusRow, reviewRow: reviewRow,
   };
 })();

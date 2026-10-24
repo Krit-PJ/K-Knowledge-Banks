@@ -10,9 +10,4 @@ export function uuidv7(nowMs = Date.now(), random = crypto.randomBytes(10)) {
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 }
 export const sha256 = (buf) => crypto.createHash('sha256').update(buf).digest('hex');
-/** Deterministic canonical JSON (sorted object keys, arrays in order). */
-export function canonicalJson(v) {
-  if (Array.isArray(v)) return `[${v.map(canonicalJson).join(',')}]`;
-  if (v && typeof v === 'object') return `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canonicalJson(v[k])}`).join(',')}}`;
-  return JSON.stringify(v);
-}
+export { canonicalJson } from './canonical-json.js';

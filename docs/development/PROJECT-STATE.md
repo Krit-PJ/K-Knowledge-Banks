@@ -1,12 +1,12 @@
 # Project State
 
 Documentation pack: **v1.0-RC2**
-วันที่จัดทำ: 2026-10-23 (Asia/Bangkok) · ปรับปรุงล่าสุด: 2026-10-25 (P2-WP5 deployed)
+วันที่จัดทำ: 2026-10-23 (Asia/Bangkok) · ปรับปรุงล่าสุด: 2026-10-25 (P2-WP6 code complete)
 
 ## Current status
 - Current Phase = **Phase 2 — Knowledge Intake, Evidence & Human Review** (STARTED 2026-10-24)
 - Coding = STARTED (Phase 2 scope only; OD-03/OD-04/OD-08 ตัดสินแล้ว 2026-10-24)
-- Next = P2-WP6 drafts/validation/review ผ่านเว็บ (รอผู้ใช้อนุมัติขอบเขต); P2-WP5 live login PASS; e2e intake + intake.update ด้วยไฟล์จริงยังรอผู้ใช้วางไฟล์ใน SourceAssets
+- Next = deploy P2-WP6 (อัปเดตสคริปต์ + ผู้ใช้อนุญาตสิทธิ์ `drive.file` และรัน `setupDrafts` + deploy version ใหม่) แล้ว e2e ด้วยไฟล์จริง; ถัดไป publication ไป GitHub canonical
 - Baseline = v1.0-RC2 (ADR-0001; RC1 retained for compatibility)
 - Master Development Prompt = v1.1 (operational consolidation)
 - Validator (P1-WP2) = DONE; GT-01..06,10,14..17 + RC1 compat = PASS (expected outputs PENDING_HUMAN_CONFIRMATION); AC-01 = PASS ระดับ validator; AC-02 = rule-level PASS / pipeline NOT RUN; GT-07,08,09,11,12,13 = NOT RUN
@@ -51,6 +51,7 @@ Documentation pack: **v1.0-RC2**
 | OD-04 เปลี่ยนเป็น Apps Script + เริ่ม P2-WP4 | AUTHORIZED | ผู้ใช้ตอบ “เปลี่ยนเป็น A (Apps Script) และ ดำเนินการต่อที่ Phase 2: P2-WP4 backend และการ sync กับ Sheets/Drive” วันที่ 2026-10-24 |
 | GitHub repo + Pages frontend | AUTHORIZED | ผู้ใช้ตอบ “ใช้ https://github.com/ เป็น Frontend ให้ชื่อว่า K-Knowledge-Banks เข้า GitHub และไปจัดการให้ด้วย” + เลือก Public / ทั้ง repo / noreply / push ผ่าน connector วันที่ 2026-10-24 |
 | Phase 1 → Phase 2 | AUTHORIZED | ผู้ใช้ตอบ “เริ่ม Phase 2” วันที่ 2026-10-24; scope = PHASE-2.md; backend/auth/API/provider ยังต้องตัดสินแยก (OD-03/OD-04) ห้ามเลือกเอง |
+| P2-WP6 scope + ADR-0002 (drafts = Drive JSON, validator = Ajv standalone + esbuild bundle, editor = JSON + template) | APPROVED | ผู้ใช้ตอบ “2” (เริ่ม P2-WP6) แล้วเลือกตัวเลือกที่แนะนำทั้ง 3 ข้อ วันที่ 2026-10-25 00:51 |
 | Phase 2 → Phase 3 | PENDING | ยังไม่มี |
 | Phase 3 → Phase 4 | PENDING | ยังไม่มี |
 | ปิด Phase 4 / รับมอบ | PENDING | ยังไม่มี |
@@ -107,3 +108,11 @@ Deployment P2-WP5 (2026-10-25): GCP project `kekb-auth` (OAuth consent External/
 Verification P2-WP5: `npm test` ผ่านทั้งหมด (รวม api.test 8 + frontend static tests); security mutation 5/5 ถูกจับ; live smoke จาก browser → token ปลอม = `UNAUTHENTICATED`, action ไม่รู้จัก = `INVALID_INPUT(action)`, key แปลก (`role`) = `INVALID_INPUT(role)`, ไม่มีค่าใด ๆ ของ input สะท้อนกลับ. Live e2e (2026-10-25, ผู้ใช้ทดสอบเอง): ลงชื่อเข้าใช้ Google ที่ console.html สำเร็จ → `whoami` = `human:krit` และ `intake.list` แสดง IntakeQueue (ว่างตามคาด) = PASS. NOT RUN: `intake.update` จริง (ยังไม่มีแถว) และ e2e intake ด้วยไฟล์จริง
 
 Next packet: ผู้ใช้ทดสอบลงชื่อเข้าใช้ console.html → แล้ว P2-WP6 drafts/validation/review ผ่านเว็บ (bundle validator สำหรับ Apps Script)
+
+P2-WP6 (2026-10-25, code complete — deploy pending): drafts/validation/review ผ่านเว็บตาม [ADR-0002](../adr/ADR-0002-draft-storage-and-apps-script-engine.md) — `core/src/engine.js` = workflow engine เดียว (storage-agnostic) ที่ทั้ง local core และ Apps Script ใช้; `scripts/build-apps-script.mjs` สร้าง `backend/apps-script/Engine.js` (Ajv standalone pre-compiled + esbuild 0.28.2, dev dependency exact pin); API ใหม่ `source.register` (re-hash Drive bytes, storageRef `kekb-intake:<intakeId>` ไม่มี Drive ID ใน record), `source.extracted`, `draft.list/get/save/validate`, `review.list/request/decide`; Code.js: Drive JSON store (`drive.file`), mirror RecordStatus/ReviewQueue/IntakeQueue.workflowState + AuditLog (buffer แล้ว flush ครั้งเดียว), `setupDrafts()`; console: intake → ลงทะเบียน → JSON editor + templates → ตรวจ → ส่งตรวจ → ตัดสิน (แสดงป้าย “ตรวจงานตัวเอง” ตาม OD-08)
+
+Verification P2-WP6: `npm test` 113/113 (เดิม 90) — รวม engine bundle byte-identical rebuild, parity กับ Node validator ทุก golden case, API workflow 8, Code.js adapter e2e บน fake Drive/Sheets/tokeninfo 3, frontend checks; mutation 10/10 ถูกจับ (หลังเพิ่ม test กรณีแก้ไฟล์ draft revision เดิม และตาราง role); UI smoke ด้วย Playwright (API ตอบด้วย Api+Engine จริงบนข้อมูลในหน่วยความจำ) ครบ flow ไม่มี console error — validator จับ LOCATOR_NOT_SUPPORTED ได้จริงเมื่อ SourceAsset ไม่ประกาศ `paragraph`. NOT RUN: deploy จริงบน Apps Script และ e2e ด้วยไฟล์จริง
+
+ความเสี่ยง/ข้อจำกัด P2-WP6: DriveApp + `drive.file` ยังไม่ได้ยืนยันบน Google จริง (ถ้าใช้ไม่ได้ ทางสำรอง = Advanced Drive service); รายการ draft อ่านทั้งโฟลเดอร์ต่อคำขอ (พอสำหรับหลักร้อย); idempotency เก็บ 6 ชม.; Engine.js 450 KB (minified, มี license notice ของ ajv/ajv-formats)
+
+Next packet: deploy P2-WP6 → e2e ด้วยไฟล์จริง → P2-WP7 publication (canonical commit ไป GitHub) + Gap/Conflict candidates

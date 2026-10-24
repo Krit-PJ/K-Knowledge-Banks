@@ -14,5 +14,6 @@ Migration plan ต้องครอบคลุม mapping, validation, compati
 Accepted ADRs:
 
 - [ADR-0001 — First-class topic taxonomy for news and technology trends](ADR-0001-topic-taxonomy.md)
+- [ADR-0002 — Draft storage on Drive and one workflow engine bundled for Apps Script](ADR-0002-draft-storage-and-apps-script-engine.md)
 
-ยังไม่เลือก validator/backend/auth runtime, framework หรือ dependency
+Runtime ที่อนุมัติแล้ว: validator = Node.js + Ajv (P1-WP2), backend = Google Apps Script (OD-04), auth = Google Sign-In + allowlist (P2-WP5), bundler = esbuild (ADR-0002)
