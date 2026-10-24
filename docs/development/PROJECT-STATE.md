@@ -1,12 +1,12 @@
 # Project State
 
 Documentation pack: **v1.0-RC2**
-วันที่จัดทำ: 2026-10-23 (Asia/Bangkok) · ปรับปรุงล่าสุด: 2026-10-25 (P2-WP6 code complete)
+วันที่จัดทำ: 2026-10-23 (Asia/Bangkok) · ปรับปรุงล่าสุด: 2026-10-25 (P2-WP6 deployed)
 
 ## Current status
 - Current Phase = **Phase 2 — Knowledge Intake, Evidence & Human Review** (STARTED 2026-10-24)
 - Coding = STARTED (Phase 2 scope only; OD-03/OD-04/OD-08 ตัดสินแล้ว 2026-10-24)
-- Next = deploy P2-WP6 (อัปเดตสคริปต์ + ผู้ใช้อนุญาตสิทธิ์ `drive.file` และรัน `setupDrafts` + deploy version ใหม่) แล้ว e2e ด้วยไฟล์จริง; ถัดไป publication ไป GitHub canonical
+- Next = ผู้ใช้ทดสอบ e2e P2-WP6 ด้วยไฟล์จริงผ่าน console.html; ถัดไป P2-WP7 publication ไป GitHub canonical
 - Baseline = v1.0-RC2 (ADR-0001; RC1 retained for compatibility)
 - Master Development Prompt = v1.1 (operational consolidation)
 - Validator (P1-WP2) = DONE; GT-01..06,10,14..17 + RC1 compat = PASS (expected outputs PENDING_HUMAN_CONFIRMATION); AC-01 = PASS ระดับ validator; AC-02 = rule-level PASS / pipeline NOT RUN; GT-07,08,09,11,12,13 = NOT RUN
@@ -115,4 +115,6 @@ Verification P2-WP6: `npm test` 113/113 (เดิม 90) — รวม engine b
 
 ความเสี่ยง/ข้อจำกัด P2-WP6: ยืนยันบน Google จริงแล้วว่า `DriveApp.createFolder` ต้องใช้ scope `drive` เต็ม → เปลี่ยน draft store เป็น Drive v3 REST ผ่าน UrlFetchApp + `ScriptApp.getOAuthToken()` (ยังคง `drive.file`; token อยู่ฝั่ง server เท่านั้น); รายการ draft อ่านทั้งโฟลเดอร์ต่อคำขอ (พอสำหรับหลักร้อย); idempotency เก็บ 6 ชม.; Engine.js 450 KB (minified, มี license notice ของ ajv/ajv-formats)
 
-Next packet: deploy P2-WP6 → e2e ด้วยไฟล์จริง → P2-WP7 publication (canonical commit ไป GitHub) + Gap/Conflict candidates
+Deployment P2-WP6 (2026-10-25): อัปเดต Apps Script 5 ไฟล์ (ดึงจาก commit ที่ pin แล้วตรวจ sha256 หลังรีโหลด: manifest 58a219de…, Code 50a27646…, Lib 5ec75d87…, Api 4f2ee9b1…, Engine b4391799…); ผู้ใช้อนุญาตสิทธิ์ `drive.file`; `setupDrafts` รอบแรกล้มเหลว (DriveApp.createFolder ต้องใช้ scope `drive`) → แก้เป็น Drive REST (commit 4b9f822) รอบสองสำเร็จ; Deploy Web App version 2 (URL เดิม). Live smoke: `draft.list` ด้วย token ปลอม = `UNAUTHENTICATED`, action ไม่รู้จัก = `INVALID_INPUT(action)`. NOT RUN: e2e ด้วยไฟล์จริงโดยผู้ใช้
+
+Next packet: e2e P2-WP6 ด้วยไฟล์จริง → P2-WP7 publication (canonical commit ไป GitHub) + Gap/Conflict candidates
