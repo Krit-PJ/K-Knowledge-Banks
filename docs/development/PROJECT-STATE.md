@@ -113,6 +113,6 @@ P2-WP6 (2026-10-25, code complete — deploy pending): drafts/validation/review 
 
 Verification P2-WP6: `npm test` 113/113 (เดิม 90) — รวม engine bundle byte-identical rebuild, parity กับ Node validator ทุก golden case, API workflow 8, Code.js adapter e2e บน fake Drive/Sheets/tokeninfo 3, frontend checks; mutation 10/10 ถูกจับ (หลังเพิ่ม test กรณีแก้ไฟล์ draft revision เดิม และตาราง role); UI smoke ด้วย Playwright (API ตอบด้วย Api+Engine จริงบนข้อมูลในหน่วยความจำ) ครบ flow ไม่มี console error — validator จับ LOCATOR_NOT_SUPPORTED ได้จริงเมื่อ SourceAsset ไม่ประกาศ `paragraph`. NOT RUN: deploy จริงบน Apps Script และ e2e ด้วยไฟล์จริง
 
-ความเสี่ยง/ข้อจำกัด P2-WP6: DriveApp + `drive.file` ยังไม่ได้ยืนยันบน Google จริง (ถ้าใช้ไม่ได้ ทางสำรอง = Advanced Drive service); รายการ draft อ่านทั้งโฟลเดอร์ต่อคำขอ (พอสำหรับหลักร้อย); idempotency เก็บ 6 ชม.; Engine.js 450 KB (minified, มี license notice ของ ajv/ajv-formats)
+ความเสี่ยง/ข้อจำกัด P2-WP6: ยืนยันบน Google จริงแล้วว่า `DriveApp.createFolder` ต้องใช้ scope `drive` เต็ม → เปลี่ยน draft store เป็น Drive v3 REST ผ่าน UrlFetchApp + `ScriptApp.getOAuthToken()` (ยังคง `drive.file`; token อยู่ฝั่ง server เท่านั้น); รายการ draft อ่านทั้งโฟลเดอร์ต่อคำขอ (พอสำหรับหลักร้อย); idempotency เก็บ 6 ชม.; Engine.js 450 KB (minified, มี license notice ของ ajv/ajv-formats)
 
 Next packet: deploy P2-WP6 → e2e ด้วยไฟล์จริง → P2-WP7 publication (canonical commit ไป GitHub) + Gap/Conflict candidates

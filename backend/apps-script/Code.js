@@ -226,32 +226,82 @@ function apiDeps_() {
 
 // ---------------------------------------------------------------------------------------------
 // P2-WP6 drafts / validation / review. Drafts are JSON files (one per id@revision) in a private Drive
-// folder created by this script (scope drive.file: the script can only write files it created).
+// folder created by this script. Scope drive.file = the script can only see/write files it created.
+// DriveApp needs the full `drive` scope to create folders, so drafts use the Drive REST API (v3) through
+// UrlFetchApp with the script's own OAuth token (server-side only; never returned or logged).
 // Sheets get status copies only (RecordStatus, ReviewQueue, IntakeQueue.workflowState) + AuditLog.
 // ---------------------------------------------------------------------------------------------
+
+var DRIVE_FILES_ = 'https://www.googleapis.com/drive/v3/files';
+var DRIVE_UPLOAD_ = 'https://www.googleapis.com/upload/drive/v3/files';
+var FOLDER_MIME_ = 'application/vnd.google-apps.folder';
+var DRIVE_ID_ = /^[A-Za-z0-9_-]{10,200}$/;
+
+/** Minimal Drive v3 REST client (drive.file). Returns null on 404; throws DRIVE_HTTP_<code> otherwise. */
+function driveCall_(method, url, body, contentType) {
+  var o = { method: method, muteHttpExceptions: true, headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() } };
+  if (body !== undefined) { o.contentType = contentType; o.payload = Utilities.newBlob(body).getBytes(); }
+  var r = UrlFetchApp.fetch(url, o);
+  var code = r.getResponseCode();
+  if (code === 404) return null;
+  if (code < 200 || code >= 300) throw new Error('DRIVE_HTTP_' + code);
+  return r.getContentText('UTF-8');
+}
+function query_(params) {
+  return Object.keys(params).map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]); }).join('&');
+}
+var DriveRest_ = {
+  exists: function (id) {
+    if (!DRIVE_ID_.test(id || '')) return false;
+    var t = driveCall_('get', DRIVE_FILES_ + '/' + id + '?fields=id,trashed');
+    return !!t && JSON.parse(t).trashed !== true;
+  },
+  list: function (parentId, extraQ) {
+    if (!DRIVE_ID_.test(parentId)) throw new Error('BAD_DRIVE_ID');
+    var q = "'" + parentId + "' in parents and trashed = false" + (extraQ || '');
+    var out = []; var next = '';
+    do {
+      var params = { q: q, fields: 'nextPageToken,files(id,name)', pageSize: 1000, spaces: 'drive' };
+      if (next) params.pageToken = next;
+      var page = JSON.parse(driveCall_('get', DRIVE_FILES_ + '?' + query_(params)));
+      out = out.concat(page.files || []); next = page.nextPageToken || '';
+    } while (next);
+    return out;
+  },
+  createFolder: function (name, parentId, description) {
+    var meta = { name: name, mimeType: FOLDER_MIME_ };
+    if (parentId) meta.parents = [parentId];
+    if (description) meta.description = description;
+    return JSON.parse(driveCall_('post', DRIVE_FILES_ + '?fields=id', JSON.stringify(meta), 'application/json')).id;
+  },
+  childFolder: function (parentId, name) {
+    var found = DriveRest_.list(parentId, " and mimeType = '" + FOLDER_MIME_ + "' and name = '" + name + "'");
+    return found.length ? found[0].id : DriveRest_.createFolder(name, parentId);
+  },
+  read: function (id) { return driveCall_('get', DRIVE_FILES_ + '/' + id + '?alt=media'); },
+  createJson: function (parentId, name, text) {
+    var b = 'kekb' + Utilities.getUuid().replace(/-/g, '');
+    var body = '--' + b + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify({ name: name, parents: [parentId], mimeType: 'application/json' }) +
+      '\r\n--' + b + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + text + '\r\n--' + b + '--';
+    return JSON.parse(driveCall_('post', DRIVE_UPLOAD_ + '?uploadType=multipart&fields=id', body, 'multipart/related; boundary=' + b)).id;
+  },
+  updateJson: function (id, text) { driveCall_('patch', DRIVE_UPLOAD_ + '/' + id + '?uploadType=media&fields=id', text, 'application/json; charset=UTF-8'); },
+};
 
 /** Run once from the editor after authorizing the drive.file scope. Idempotent. */
 function setupDrafts() {
   var p = PropertiesService.getScriptProperties();
   var id = p.getProperty('DRAFTS_FOLDER_ID');
-  var folder = null;
-  if (id) { try { folder = DriveApp.getFolderById(id); } catch (err) { folder = null; } }
-  if (!folder) {
-    folder = DriveApp.createFolder('KEKB Drafts (private)');
-    folder.setDescription('KEKB draft records and review requests. Written only by the KEKB Apps Script. Not canonical.');
-    p.setProperty('DRAFTS_FOLDER_ID', folder.getId());
+  if (!id || !DriveRest_.exists(id)) {
+    id = DriveRest_.createFolder('KEKB Drafts (private)', null, 'KEKB draft records and review requests. Written only by the KEKB Apps Script. Not canonical.');
+    p.setProperty('DRAFTS_FOLDER_ID', id);
   }
-  subFolder_(folder, 'records'); subFolder_(folder, 'reviews');
+  DriveRest_.childFolder(id, 'records'); DriveRest_.childFolder(id, 'reviews');
   var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('ReviewQueue');
   var header = sh.getRange(1, 1, 1, KEKB.TABS.ReviewQueue.columns.length).getValues()[0].map(String);
   if (header.join('|') !== KEKB.TABS.ReviewQueue.columns.join('|')) throw new Error('SHEET_SCHEMA_MISMATCH in ReviewQueue');
   sh.getRange(2, 1, sh.getMaxRows() - 1, header.length).setNumberFormat('@');
   return 'OK: drafts folder ready';
-}
-
-function subFolder_(parent, name) {
-  var it = parent.getFoldersByName(name);
-  return it.hasNext() ? it.next() : parent.createFolder(name);
 }
 
 var DRAFT_NAME_ = /^([0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})@([1-9][0-9]{0,5})\.json$/;
@@ -264,27 +314,30 @@ function driveStore_(folderId, pending) {
   function D() {
     if (!dirs) {
       if (!folderId) throw new Error('CONFIG_MISSING');
-      var root = DriveApp.getFolderById(folderId);
-      dirs = { rec: subFolder_(root, 'records'), rev: subFolder_(root, 'reviews') };
+      dirs = { rec: DriveRest_.childFolder(folderId, 'records'), rev: DriveRest_.childFolder(folderId, 'reviews') };
     }
     return dirs;
   }
   var recIndex = null; var revIndex = null; var texts = {}; var canonical = null;
-  function index(dir, re) {
-    var out = {}; var it = dir.getFiles();
-    while (it.hasNext()) { var f = it.next(); if (re.test(f.getName())) out[f.getName()] = f; }
+  function index(dirId, re) {
+    var out = {};
+    DriveRest_.list(dirId).forEach(function (f) { if (re.test(f.name)) out[f.name] = f.id; });
     return out;
   }
   function recs() { if (!recIndex) recIndex = index(D().rec, DRAFT_NAME_); return recIndex; }
   function revs() { if (!revIndex) revIndex = index(D().rev, REVIEW_NAME_); return revIndex; }
   function read(idx, name) {
     if (!idx[name]) return undefined;
-    if (texts[name] === undefined) texts[name] = idx[name].getBlob().getDataAsString('UTF-8');
+    if (texts[name] === undefined) {
+      var t = DriveRest_.read(idx[name]);
+      if (t === null) throw new Error('DRIVE_FILE_MISSING');
+      texts[name] = t;
+    }
     return JSON.parse(texts[name]);
   }
-  function write(dir, idx, name, obj) {
+  function write(dirId, idx, name, obj) {
     var text = JSON.stringify(obj, null, 2) + '\n';
-    if (idx[name]) idx[name].setContent(text); else idx[name] = dir.createFile(name, text, 'application/json');
+    if (idx[name]) DriveRest_.updateJson(idx[name], text); else idx[name] = DriveRest_.createJson(dirId, name, text);
     texts[name] = text;
   }
   function revisionsOf(id) {

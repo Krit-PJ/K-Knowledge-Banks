@@ -43,7 +43,9 @@ test('before setupDrafts: identity + intake work, draft actions fail safely; set
   const id = e.props.DRAFTS_FOLDER_ID; assert.ok(id);
   e.ctx.setupDrafts();
   assert.equal(e.props.DRAFTS_FOLDER_ID, id);
-  assert.equal(e.drive.ops.filter((o) => o[0] === 'createFolder' && o[1] === 'KEKB Drafts (private)').length, 1);
+  assert.equal(e.svc.rest.ops.filter((o) => o[0] === 'createFolder' && o[1] === 'KEKB Drafts (private)').length, 1);
+  assert.equal(e.svc.rest.ops.filter((o) => o[0] === 'createFolder').length, 3, 'drafts root + records + reviews, once');
+  assert.ok(!e.svc.fetches.some((u) => /ya-fake-script-token/.test(u)), 'OAuth token never in URLs');
   assert.deepEqual(e.post('draft.list').data.items, []);
 });
 
@@ -71,12 +73,14 @@ test('full flow through doPost: Drive JSON drafts, Sheet mirrors (RecordStatus /
   assert.equal(d.ok, true, JSON.stringify(d)); assert.equal(d.data.selfReview, true);
 
   // Drive: one JSON file per id@revision (11 records + ReviewSnapshot), one review file; no Drive ids inside records
-  const root = e.drive.DriveApp.getFolderById(e.props.DRAFTS_FOLDER_ID);
-  const names = (dirName) => { const it = root.getFoldersByName(dirName).next().getFiles(); const out = []; while (it.hasNext()) out.push(it.next()); return out; };
-  const recFiles = names('records'); assert.equal(recFiles.length, 12);
-  const allText = recFiles.map((f) => f.getBlob().getDataAsString()).join('\n');
+  const R = e.svc.rest;
+  const sub = (name) => R.children(e.props.DRAFTS_FOLDER_ID).find((f) => f.name === name);
+  const recFiles = R.children(sub('records').id); assert.equal(recFiles.length, 12);
+  assert.ok(R.ops.some((o) => o[0] === 'update'), 'state changes rewrite the same id@revision file');
+  const allText = recFiles.map((f) => f.content).join('\n');
+  assert.ok(allText.includes('ปุ๋ยสูตร A'), 'Thai text round-trips as UTF-8');
   assert.ok(!allText.includes(e.rawFile.getId()) && !allText.includes(e.props.SOURCE_FOLDER_ID), 'no Drive ids in records');
-  assert.equal(names('reviews').length, 1);
+  assert.equal(R.children(sub('reviews').id).length, 1);
 
   // Sheets mirrors
   const status = e.rows('RecordStatus');

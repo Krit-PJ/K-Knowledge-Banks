@@ -60,10 +60,56 @@ export function fakeSheets(tabs) {
   return { SpreadsheetApp: { getActiveSpreadsheet: () => ({ getSheetByName: (n) => sheets[n] || null }) }, sheets };
 }
 
+/** Drive v3 REST fake (drive.file semantics: only items created through it exist). */
+export function fakeDriveRest(token) {
+  const items = new Map(); let n = 0; const ops = [];
+  const id = () => `rest${String(++n).padStart(8, '0')}abc`;
+  const text = (payload) => (payload === undefined ? '' : Buffer.from(unsigned(payload)).toString('utf8'));
+  const ok = (obj) => ({ getResponseCode: () => 200, getContentText: () => (typeof obj === 'string' ? obj : JSON.stringify(obj)) });
+  const notFound = { getResponseCode: () => 404, getContentText: () => '{}' };
+  function handle(url, opts) {
+    if (!opts.headers || opts.headers.Authorization !== `Bearer ${token}`) return { getResponseCode: () => 401, getContentText: () => '{}' };
+    const u = new URL(url); const method = (opts.method || 'get').toLowerCase();
+    const parts = u.pathname.split('/').filter(Boolean); // drive v3 files [id]  |  upload drive v3 files [id]
+    const fileId = parts[0] === 'upload' ? parts[4] : parts[3];
+    if (parts[0] !== 'upload' && method === 'get' && !fileId) {
+      const q = u.searchParams.get('q');
+      const m = /^'([^']+)' in parents and trashed = false(?: and mimeType = '([^']+)')?(?: and name = '([^']+)')?$/.exec(q);
+      if (!m) throw new Error(`fake: unsupported q ${q}`);
+      const files = [...items.values()].filter((it) => it.parents.includes(m[1]) && !it.trashed && (!m[2] || it.mimeType === m[2]) && (!m[3] || it.name === m[3]))
+        .map((it) => ({ id: it.id, name: it.name }));
+      return ok({ files });
+    }
+    if (parts[0] !== 'upload' && method === 'get') {
+      const it = items.get(fileId); if (!it) return notFound;
+      return u.searchParams.get('alt') === 'media' ? ok(it.content) : ok({ id: it.id, trashed: it.trashed });
+    }
+    if (parts[0] !== 'upload' && method === 'post') {
+      const meta = JSON.parse(text(opts.payload)); const it = { id: id(), name: meta.name, mimeType: meta.mimeType, parents: meta.parents || ['root'], content: '', trashed: false };
+      items.set(it.id, it); ops.push(['createFolder', meta.name]); return ok({ id: it.id });
+    }
+    if (parts[0] === 'upload' && method === 'post') {
+      const b = /boundary=(.+)$/.exec(opts.contentType)[1]; const segs = text(opts.payload).split(`--${b}`).slice(1, 3).map((x) => x.split('\r\n\r\n').slice(1).join('\r\n\r\n').replace(/\r\n$/, ''));
+      const meta = JSON.parse(segs[0]); const it = { id: id(), name: meta.name, mimeType: meta.mimeType, parents: meta.parents, content: segs[1], trashed: false };
+      items.set(it.id, it); ops.push(['createFile', meta.name]); return ok({ id: it.id });
+    }
+    if (parts[0] === 'upload' && method === 'patch') {
+      const it = items.get(fileId); if (!it) return notFound;
+      it.content = text(opts.payload); ops.push(['update', it.name]); return ok({ id: it.id });
+    }
+    throw new Error(`fake: unsupported ${method} ${url}`);
+  }
+  const children = (parentId) => [...items.values()].filter((it) => it.parents.includes(parentId));
+  return { items, ops, handle, children };
+}
+
 export function fakeServices({ props, tokens, drive, sheets }) {
   const cache = new Map(); const fetches = [];
+  const OAUTH = 'ya-fake-script-token';
+  const rest = fakeDriveRest(OAUTH);
   return {
-    ...drive, ...sheets,
+    ...drive, ...sheets, rest,
+    ScriptApp: { getOAuthToken: () => OAUTH },
     PropertiesService: { getScriptProperties: () => ({ getProperty: (k) => (k in props ? props[k] : null), setProperty: (k, v) => { props[k] = v; } }) },
     CacheService: { getScriptCache: () => ({ get: (k) => cache.get(k) ?? null, put: (k, v) => cache.set(k, v) }) },
     LockService: { getScriptLock: () => ({ tryLock: () => true, releaseLock: () => {} }) },
@@ -71,6 +117,7 @@ export function fakeServices({ props, tokens, drive, sheets }) {
       DigestAlgorithm: { SHA_256: 'sha256' },
       computeDigest: (alg, bytes) => signed(crypto.createHash(alg).update(unsigned(bytes)).digest()),
       newBlob: (text) => ({ getBytes: () => signed(Buffer.from(String(text), 'utf8')) }),
+      getUuid: () => crypto.randomUUID(),
     },
     ContentService: { MimeType: { JSON: 'json' }, createTextOutput: (s) => { const o = { content: s, setMimeType: () => o }; return o; } },
     UrlFetchApp: {
@@ -80,6 +127,7 @@ export function fakeServices({ props, tokens, drive, sheets }) {
           const c = tokens[opts.payload && opts.payload.id_token];
           return { getResponseCode: () => (c ? 200 : 400), getContentText: () => JSON.stringify(c || { error: 'invalid_token' }) };
         }
+        if (url.startsWith('https://www.googleapis.com/')) return rest.handle(url, opts);
         return { getResponseCode: () => 404, getContentText: () => '' };
       },
     },
